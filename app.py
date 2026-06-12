@@ -171,7 +171,7 @@ def app_ui():
     return render_template('index.html')
 
 # Get all rashifal
-@app.route('/rashifal')
+@app.route('/api/rashifal')
 def get_all_rashifal():
     return jsonify({
         "success": True,
