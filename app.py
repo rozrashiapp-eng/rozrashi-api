@@ -1,7 +1,8 @@
 from flask import Flask, jsonify, render_template
+from flask_cors import CORS
 
 app = Flask(__name__)
-
+CORS(app)
 # ✅ SAMPLE RASHIFAL DATA (same structure your JS expects)
 rashifal_data = [
     {"id": 1, "name": "मेष", "english": "Aries", "symbol": "♈",
