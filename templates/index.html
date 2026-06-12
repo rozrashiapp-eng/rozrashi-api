@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RozRashi</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<div class="header">
+    <h1>🌟 RozRashi</h1>
+    <span class="date" id="today-date"></span>
+</div>
+
+<!-- ===== TOAST MESSAGE ===== -->
+<div class="toast" id="toast">✅ कॉपी हो गया!</div>
+
+<!-- ===== HOME SCREEN ===== -->
+<div class="screen active" id="screen-home">
+    <div class="welcome-card">
+        <h2>🙏 नमस्ते!</h2>
+        <p>अपनी राशि चुनें और आज का राशिफल देखें</p>
+    </div>
+    <div class="section-title">⭐ अपनी राशि चुनें</div>
+    <div class="rashi-grid" id="rashi-grid">
+        <div class="loading">राशि लोड हो रही है...</div>
+    </div>
+    <div class="section-title">💬 आज का स्टेटस</div>
+    <div id="home-status-preview">
+        <div class="loading">स्टेटस लोड हो रही है...</div>
+    </div>
+</div>
+
+<!-- ===== RASHI LIST SCREEN ===== -->
+<div class="screen" id="screen-rashifal">
+    <div class="section-title">🔮 सभी राशियाँ</div>
+    <div class="rashi-grid" id="rashifal-grid">
+        <div class="loading">राशि लोड हो रही है...</div>
+    </div>
+</div>
+
+<!-- ===== RASHI DETAIL SCREEN ===== -->
+<div class="screen" id="screen-rashi-detail">
+    <button class="back-btn" onclick="goBack()">← वापस जाएं</button>
+    <div id="rashi-detail-content">
+        <div class="loading">लोड हो रही है...</div>
+    </div>
+</div>
+
+<!-- ===== STATUS SCREEN ===== -->
+<div class="screen" id="screen-status">
+    <div class="category-tabs" id="category-tabs">
+        <button class="tab-btn active" onclick="loadStatus('good_morning', this)">
+            🌅 गुड मॉर्निंग
+        </button>
+        <button class="tab-btn" onclick="loadStatus('motivational', this)">
+            💪 मोटिवेशन
+        </button>
+        <button class="tab-btn" onclick="loadStatus('love', this)">
+            ❤️ लव
+        </button>
+        <button class="tab-btn" onclick="loadStatus('attitude', this)">
+            😎 एटीट्यूड
+        </button>
+        <button class="tab-btn" onclick="loadStatus('sad', this)">
+            😔 सैड
+        </button>
+    </div>
+    <div id="status-list">
+        <div class="loading">स्टेटस लोड हो रही है...</div>
+    </div>
+</div>
+
+<!-- ===== BOTTOM NAVIGATION ===== -->
+<div class="bottom-nav">
+    <button class="nav-btn active" id="nav-home" onclick="showScreen('home')">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">होम</span>
+    </button>
+    <button class="nav-btn" id="nav-rashifal" onclick="showScreen('rashifal')">
+        <span class="nav-icon">🔮</span>
+        <span class="nav-label">राशिफल</span>
+    </button>
+    <button class="nav-btn" id="nav-status" onclick="showScreen('status')">
+        <span class="nav-icon">💬</span>
+        <span class="nav-label">स्टेटस</span>
+    </button>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

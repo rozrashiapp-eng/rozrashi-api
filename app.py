@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -165,6 +165,10 @@ def home():
         "message": "RozRashi API is running!",
         "version": "1.0"
     })
+
+@app.route('/app')
+def app_ui():
+    return render_template('index.html')
 
 # Get all rashifal
 @app.route('/rashifal')

@@ -1,0 +1,344 @@
+@import url('https://fonts.googleapis.com/css2?family=Hind:wght@300;400;500;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Hind', sans-serif;
+    background-color: #0f0f1a;
+    color: #ffffff;
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* ===== TOP HEADER ===== */
+.header {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid #2a2a4a;
+}
+
+.header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    background: linear-gradient(90deg, #f7971e, #ffd200);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.header .date {
+    font-size: 12px;
+    color: #8888aa;
+}
+
+/* ===== SCREENS ===== */
+.screen {
+    display: none;
+    padding: 15px;
+    padding-bottom: 80px;
+}
+
+.screen.active {
+    display: block;
+}
+
+/* ===== HOME SCREEN ===== */
+.welcome-card {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.welcome-card h2 {
+    font-size: 20px;
+    margin-bottom: 5px;
+}
+
+.welcome-card p {
+    font-size: 13px;
+    opacity: 0.85;
+}
+
+.section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #ffd200;
+    margin-bottom: 12px;
+    margin-top: 10px;
+}
+
+/* ===== RASHI GRID ON HOME ===== */
+.rashi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.rashi-mini-card {
+    background: #1a1a2e;
+    border: 1px solid #2a2a4a;
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.rashi-mini-card:active {
+    transform: scale(0.95);
+    background: #2a2a4a;
+}
+
+.rashi-mini-card .symbol {
+    font-size: 24px;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.rashi-mini-card .name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.rashi-mini-card .english {
+    font-size: 10px;
+    color: #8888aa;
+}
+
+/* ===== RASHI DETAIL ===== */
+.rashi-detail-card {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    border: 1px solid #2a2a4a;
+    margin-bottom: 16px;
+}
+
+.rashi-detail-card .big-symbol {
+    font-size: 60px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.rashi-detail-card h2 {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #ffd200;
+}
+
+.rashi-detail-card .english-name {
+    font-size: 14px;
+    color: #8888aa;
+    margin-bottom: 16px;
+}
+
+.rashi-detail-card .message {
+    font-size: 16px;
+    line-height: 1.7;
+    color: #ddddff;
+    text-align: left;
+    background: #0f0f1a;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+.lucky-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.lucky-badge {
+    background: #2a2a4a;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px;
+    color: #ffd200;
+}
+
+/* ===== STATUS SCREEN ===== */
+.category-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    margin-bottom: 16px;
+    scrollbar-width: none;
+}
+
+.category-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.tab-btn {
+    background: #1a1a2e;
+    border: 1px solid #2a2a4a;
+    border-radius: 20px;
+    padding: 7px 16px;
+    font-size: 13px;
+    color: #8888aa;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: 'Hind', sans-serif;
+    transition: all 0.2s;
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, #f7971e, #ffd200);
+    color: #000000;
+    font-weight: 600;
+    border-color: transparent;
+}
+
+/* ===== STATUS CARDS ===== */
+.status-card {
+    background: #1a1a2e;
+    border: 1px solid #2a2a4a;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    position: relative;
+}
+
+.status-card .status-text {
+    font-size: 15px;
+    line-height: 1.7;
+    color: #ffffff;
+    margin-bottom: 12px;
+}
+
+.status-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-copy {
+    flex: 1;
+    background: #2a2a4a;
+    border: none;
+    border-radius: 8px;
+    padding: 8px;
+    color: #ffffff;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'Hind', sans-serif;
+    transition: all 0.2s;
+}
+
+.btn-share {
+    flex: 1;
+    background: linear-gradient(135deg, #25d366, #128c7e);
+    border: none;
+    border-radius: 8px;
+    padding: 8px;
+    color: #ffffff;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'Hind', sans-serif;
+    transition: all 0.2s;
+}
+
+.btn-copy:active, .btn-share:active {
+    transform: scale(0.97);
+}
+
+/* ===== BACK BUTTON ===== */
+.back-btn {
+    background: #2a2a4a;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    color: #ffffff;
+    font-size: 13px;
+    cursor: pointer;
+    margin-bottom: 16px;
+    font-family: 'Hind', sans-serif;
+}
+
+/* ===== BOTTOM NAVIGATION ===== */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    background: #1a1a2e;
+    border-top: 1px solid #2a2a4a;
+    display: flex;
+    justify-content: space-around;
+    padding: 8px 0;
+    z-index: 100;
+}
+
+.nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px 15px;
+    border-radius: 10px;
+    transition: all 0.2s;
+}
+
+.nav-btn .nav-icon {
+    font-size: 22px;
+}
+
+.nav-btn .nav-label {
+    font-size: 10px;
+    color: #8888aa;
+    font-family: 'Hind', sans-serif;
+}
+
+.nav-btn.active .nav-label {
+    color: #ffd200;
+}
+
+/* ===== LOADING ===== */
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #8888aa;
+    font-size: 15px;
+}
+
+/* ===== TOAST MESSAGE ===== */
+.toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #25d366;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-family: 'Hind', sans-serif;
+    z-index: 999;
+    display: none;
+}
+
+
