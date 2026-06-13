@@ -423,28 +423,50 @@ function roundRect(ctx, x, y, w, h, r) {
 // Download image
 function downloadImage() {
     const canvas = document.getElementById('statusCanvas');
-    const link = document.createElement('a');
-    link.download = 'rozrashi-status.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    showToast('✅ Image Download हो रही है!');
+    const small = document.createElement('canvas');
+    small.width = 540;
+    small.height = 540;
+    small.getContext('2d').drawImage(canvas, 0, 0, 540, 540);
+    const base64 = small.toDataURL('image/jpeg', 0.85).split(',')[1];
+
+    closeGenerator();
+
+    if (window.Android) {
+        setTimeout(() => {
+            Android.saveImage(base64);
+        }, 400);
+    } else {
+        const link = document.createElement('a');
+        link.download = 'rozrashi-status.jpg';
+        link.href = 'data:image/jpeg;base64,' + base64;
+        link.click();
+        setTimeout(() => showToast('✅ Image Download हो रही है!'), 400);
+    }
 }
 
-// Share image
 function shareImage() {
     const canvas = document.getElementById('statusCanvas');
-    canvas.toBlob(async (blob) => {
-        const file = new File([blob], 'rozrashi-status.png',
-            { type: 'image/png' });
-        if (window.Android) {
-            // Download first then share on Android
-            downloadImage();
-            showToast('✅ Gallery में Save करें फिर WhatsApp पर Share करें!');
-        } else if (navigator.share && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file] });
-        } else {
-            downloadImage();
-            showToast('✅ Image Save करें फिर WhatsApp Status में लगाएं!');
-        }
-    }, 'image/png');
+    const small = document.createElement('canvas');
+    small.width = 540;
+    small.height = 540;
+    small.getContext('2d').drawImage(canvas, 0, 0, 540, 540);
+    const base64 = small.toDataURL('image/jpeg', 0.85).split(',')[1];
+
+    closeGenerator();
+
+    if (window.Android) {
+        setTimeout(() => {
+            Android.shareImage(base64);
+        }, 400);
+    } else {
+        small.toBlob(async (blob) => {
+            const file = new File([blob], 'rozrashi-status.jpg',
+                { type: 'image/jpeg' });
+            if (navigator.share && navigator.canShare({ files: [file] })) {
+                await navigator.share({ files: [file] });
+            } else {
+                downloadImage();
+            }
+        }, 'image/jpeg', 0.85);
+    }
 }
