@@ -421,8 +421,29 @@ rashifal_messages = {
         "महीने के अंत में सपने और हकीकत के बीच की दूरी को एक कदम से कम करें। आप एक dreamer हैं जो dream को सच कर सकते हैं।",
     ],
 }
+# Offset per rashi - ensures different topics each day
+RASHI_OFFSET = {
+    "mesh":     0,
+    "vrishabh": 5,
+    "mithun":   10,
+    "kark":     15,
+    "singh":    20,
+    "kanya":    25,
+    "tula":     2,
+    "vrischik": 7,
+    "dhanu":    12,
+    "makar":    17,
+    "kumbh":    22,
+    "meen":     27,
+}
+
+def get_day_index(rashi_key):
+    today = datetime.now()
+    base = (today.day + today.month)
+    return (base + RASHI_OFFSET[rashi_key]) % 30
+
+
 def get_rashifal_today():
-    idx = get_day_index()
     rashi_list = [
         {"id":1,  "name":"मेष",     "english":"Aries",       "symbol":"♈","key":"mesh"},
         {"id":2,  "name":"वृषभ",    "english":"Taurus",      "symbol":"♉","key":"vrishabh"},
@@ -440,6 +461,7 @@ def get_rashifal_today():
     result = []
     for rashi in rashi_list:
         key = rashi["key"]
+        idx = get_day_index(key)
         result.append({
             "id":           rashi["id"],
             "name":         rashi["name"],
