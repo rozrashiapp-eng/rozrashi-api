@@ -159,10 +159,13 @@ async function loadStatus(category, btnElement) {
                 <div class="status-text">${text}</div>
                 <div class="status-actions">
                     <button class="btn-copy" onclick="copyStatus(\`${text.replace(/`/g, "'")}\`)">
-                        📋 कॉपी करें
+                        📋 कॉपी
                     </button>
                     <button class="btn-share" onclick="shareStatus(\`${text.replace(/`/g, "'")}\`)">
-                        📤 WhatsApp
+                        📤 Text
+                    </button>
+                    <button class="btn-image" onclick="openGenerator(\`${text.replace(/`/g, "'")}\`)">
+                        🎨 Image
                     </button>
                 </div>
             `;
@@ -240,3 +243,208 @@ document.addEventListener('DOMContentLoaded', () => {
     setTodayDate();
     loadHome();
 });
+
+// ===== IMAGE CARD GENERATOR =====
+
+const THEMES = [
+    {
+        name: "Purple",
+        bg1: "#4c1d95", bg2: "#7c3aed",
+        text: "#ffffff", sub: "rgba(255,255,255,0.75)"
+    },
+    {
+        name: "Sunset",
+        bg1: "#92400e", bg2: "#dc2626",
+        text: "#ffffff", sub: "rgba(255,255,255,0.75)"
+    },
+    {
+        name: "Ocean",
+        bg1: "#1e3a5f", bg2: "#0369a1",
+        text: "#ffffff", sub: "rgba(255,255,255,0.75)"
+    },
+    {
+        name: "Forest",
+        bg1: "#14532d", bg2: "#15803d",
+        text: "#ffffff", sub: "rgba(255,255,255,0.75)"
+    },
+    {
+        name: "Rose",
+        bg1: "#881337", bg2: "#be185d",
+        text: "#ffffff", sub: "rgba(255,255,255,0.75)"
+    },
+    {
+        name: "Dark",
+        bg1: "#111827", bg2: "#374151",
+        text: "#ffd200", sub: "rgba(255,210,0,0.75)"
+    },
+];
+
+let currentTheme = 0;
+let currentStatusText = '';
+
+// Open generator overlay
+function openGenerator(text) {
+    currentStatusText = text;
+    currentTheme = 0;
+
+    // Reset theme buttons
+    document.querySelectorAll('.theme-btn').forEach(b =>
+        b.classList.remove('selected'));
+    document.querySelectorAll('.theme-btn')[0]
+        .classList.add('selected');
+
+    // Set text preview
+    document.getElementById('generatorText').textContent = text;
+
+    // Draw canvas
+    drawStatusCard();
+
+    // Show overlay
+    document.getElementById('generatorOverlay')
+        .classList.add('active');
+}
+
+// Close generator overlay
+function closeGenerator() {
+    document.getElementById('generatorOverlay')
+        .classList.remove('active');
+}
+
+// Select theme
+function selectTheme(index, btn) {
+    currentTheme = index;
+    document.querySelectorAll('.theme-btn')
+        .forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    drawStatusCard();
+}
+
+// Draw canvas
+function drawStatusCard() {
+    const canvas = document.getElementById('statusCanvas');
+    const ctx = canvas.getContext('2d');
+    const W = 1080, H = 1080;
+    const th = THEMES[currentTheme];
+
+    // Background gradient
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, th.bg1);
+    grad.addColorStop(1, th.bg2);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Decorative circles
+    ctx.fillStyle = 'rgba(255,255,255,0.07)';
+    ctx.beginPath();
+    ctx.arc(W * 0.85, H * 0.15, 180, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(W * 0.1, H * 0.82, 140, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Inner card
+    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+    roundRect(ctx, 60, 60, W - 120, H - 120, 40);
+    ctx.fill();
+
+    // App name at top
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 42px Hind, sans-serif';
+    ctx.fillStyle = th.sub;
+    ctx.fillText('🌟 RozRashi', W / 2, 160);
+
+    // Divider line top
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(W / 2 - 160, 190);
+    ctx.lineTo(W / 2 + 160, 190);
+    ctx.stroke();
+
+    // Main status text
+    ctx.font = 'bold 58px Hind, sans-serif';
+    ctx.fillStyle = th.text;
+    drawWrappedText(ctx, currentStatusText, W / 2, 280, W - 200, 80);
+
+    // Divider line bottom
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(W / 2 - 160, H - 200);
+    ctx.lineTo(W / 2 + 160, H - 200);
+    ctx.stroke();
+
+    // Watermark at bottom
+    ctx.font = '38px Hind, sans-serif';
+    ctx.fillStyle = th.sub;
+    ctx.fillText('📲 RozRashi App से', W / 2, H - 150);
+    ctx.fillText('👉 bit.ly/rozrashi', W / 2, H - 95);
+}
+
+// Helper — draw wrapped Hindi text
+function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
+    const lines = text.split('\n');
+    let currentY = y;
+    lines.forEach(line => {
+        const words = line.split(' ');
+        let currentLine = '';
+        words.forEach(word => {
+            const testLine = currentLine ? currentLine + ' ' + word : word;
+            if (ctx.measureText(testLine).width > maxWidth && currentLine) {
+                ctx.fillText(currentLine, x, currentY);
+                currentLine = word;
+                currentY += lineHeight;
+            } else {
+                currentLine = testLine;
+            }
+        });
+        if (currentLine) {
+            ctx.fillText(currentLine, x, currentY);
+            currentY += lineHeight;
+        }
+    });
+}
+
+// Helper — rounded rectangle
+function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+}
+
+// Download image
+function downloadImage() {
+    const canvas = document.getElementById('statusCanvas');
+    const link = document.createElement('a');
+    link.download = 'rozrashi-status.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast('✅ Image Download हो रही है!');
+}
+
+// Share image
+function shareImage() {
+    const canvas = document.getElementById('statusCanvas');
+    canvas.toBlob(async (blob) => {
+        const file = new File([blob], 'rozrashi-status.png',
+            { type: 'image/png' });
+        if (window.Android) {
+            // Download first then share on Android
+            downloadImage();
+            showToast('✅ Gallery में Save करें फिर WhatsApp पर Share करें!');
+        } else if (navigator.share && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file] });
+        } else {
+            downloadImage();
+            showToast('✅ Image Save करें फिर WhatsApp Status में लगाएं!');
+        }
+    }, 'image/png');
+}

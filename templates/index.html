@@ -73,7 +73,57 @@
     </div>
 </div>
 
+<!-- ===== IMAGE CARD GENERATOR OVERLAY ===== -->
+<div class="generator-overlay" id="generatorOverlay">
+    <div class="generator-box">
 
+        <div class="generator-header">
+            <span class="generator-title">🎨 Image Status बनाएं</span>
+            <button class="generator-close" onclick="closeGenerator()">✕</button>
+        </div>
+
+        <!-- STATUS TEXT PREVIEW -->
+        <div style="background:#0f0f1a;border-radius:10px;padding:12px;
+                    margin-bottom:14px;font-size:14px;line-height:1.7;
+                    color:#ddddff;font-family:'Hind',sans-serif;"
+             id="generatorText">
+        </div>
+
+        <!-- THEME SELECTOR -->
+        <div class="theme-label">🎨 थीम चुनें</div>
+        <div class="theme-row">
+            <button class="theme-btn theme-purple selected"
+                onclick="selectTheme(0,this)">Purple</button>
+            <button class="theme-btn theme-sunset"
+                onclick="selectTheme(1,this)">Sunset</button>
+            <button class="theme-btn theme-ocean"
+                onclick="selectTheme(2,this)">Ocean</button>
+            <button class="theme-btn theme-forest"
+                onclick="selectTheme(3,this)">Forest</button>
+            <button class="theme-btn theme-rose"
+                onclick="selectTheme(4,this)">Rose</button>
+            <button class="theme-btn theme-dark"
+                onclick="selectTheme(5,this)">Dark</button>
+        </div>
+
+        <!-- CANVAS PREVIEW -->
+        <div class="theme-label">👁️ Preview</div>
+        <div class="canvas-wrap">
+            <canvas id="statusCanvas" width="1080" height="1080"></canvas>
+        </div>
+
+        <!-- BUTTONS -->
+        <div class="gen-btn-row">
+            <button class="btn-download" onclick="downloadImage()">
+                📥 Download
+            </button>
+            <button class="btn-wa-share" onclick="shareImage()">
+                📤 WhatsApp
+            </button>
+        </div>
+
+    </div>
+</div>
 <!-- ===== BOTTOM NAVIGATION ===== -->
 
 <div class="bottom-nav">
