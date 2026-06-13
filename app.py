@@ -1,49 +1,11 @@
 from flask import Flask, jsonify, render_template
 from flask_cors import CORS
-from datetime import date
-import firebase_admin
-from firebase_admin import credentials, firestore
+from rashifal_data import get_rashifal_today, get_single_rashi_today
 import os
 
 app = Flask(__name__)
+app.json.ensure_ascii = False
 CORS(app)
-
-# ════════════════════════════════════════
-#  FIREBASE INIT via Environment Variables
-# ════════════════════════════════════════
-
-private_key = os.environ.get("FIREBASE_PRIVATE_KEY", "").replace("\\n", "\n")
-
-cred = credentials.Certificate({
-    "type": "service_account",
-    "project_id": os.environ.get("FIREBASE_PROJECT_ID"),
-    "private_key_email": os.environ.get("FIREBASE_CLIENT_EMAIL"),
-    "private_key": private_key,
-    "client_email": os.environ.get("FIREBASE_CLIENT_EMAIL"),
-    "token_uri": "https://oauth2.googleapis.com/token",
-})
-
-firebase_admin.initialize_app(cred)
-db = firestore.client()
-
-# ════════════════════════════════════════
-#  RASHI METADATA
-# ════════════════════════════════════════
-
-RASHI_META = [
-    {"id": 1,  "name": "मेष",      "english": "Aries",       "symbol": "♈"},
-    {"id": 2,  "name": "वृषभ",    "english": "Taurus",      "symbol": "♉"},
-    {"id": 3,  "name": "मिथुन",   "english": "Gemini",      "symbol": "♊"},
-    {"id": 4,  "name": "कर्क",    "english": "Cancer",      "symbol": "♋"},
-    {"id": 5,  "name": "सिंह",    "english": "Leo",         "symbol": "♌"},
-    {"id": 6,  "name": "कन्या",   "english": "Virgo",       "symbol": "♍"},
-    {"id": 7,  "name": "तुला",    "english": "Libra",       "symbol": "♎"},
-    {"id": 8,  "name": "वृश्चिक", "english": "Scorpio",     "symbol": "♏"},
-    {"id": 9,  "name": "धनु",     "english": "Sagittarius", "symbol": "♐"},
-    {"id": 10, "name": "मकर",     "english": "Capricorn",   "symbol": "♑"},
-    {"id": 11, "name": "कुंभ",    "english": "Aquarius",    "symbol": "♒"},
-    {"id": 12, "name": "मीन",     "english": "Pisces",      "symbol": "♓"},
-]
 
 # ════════════════════════════════════════
 #  STATUS DATA
@@ -63,11 +25,6 @@ STATUS_DATA = {
         "खुद पर विश्वास रखो — तुम जो सोचते हो वो बन सकते हो ✨",
         "हर दिन एक नया मौका है — इसे गंवाओ मत 🌟",
         "मेहनत कभी बेकार नहीं जाती — फल जरूर मिलता है 💯",
-    ],
-    "motivation": [
-        "सफलता मेहनत से मिलती है 💪",
-        "हार मत मानो, कोशिश जारी रखो 🔥",
-        "खुद पर विश्वास रखो ✨",
     ],
     "love": [
         "प्यार में सब कुछ खूबसूरत लगता है ❤️",
@@ -96,102 +53,44 @@ STATUS_DATA = {
 #  ROUTES
 # ════════════════════════════════════════
 
+@app.route('/')
+def home():
+    return jsonify({
+        "message": "RozRashi API is running!",
+        "version": "2.0"
+    })
+
 @app.route('/app')
 def app_ui():
     return render_template('index.html')
 
-
 @app.route('/rashifal')
 def get_all_rashifal():
-    """Return all 12 rashis with today's horoscope from Firestore."""
-    today_day = date.today().day  # 1-30/31
-    day_index = min(today_day, 30)  # cap at 30
-
-    result = []
-    for meta in RASHI_META:
-        rashi_name = meta["name"]
-        try:
-            doc = db.collection("rashifal") \
-                    .document(rashi_name) \
-                    .collection("days") \
-                    .document(str(day_index)) \
-                    .get()
-
-            if doc.exists:
-                day_data = doc.to_dict()
-            else:
-                day_data = {
-                    "message": "आज का राशिफल जल्द उपलब्ध होगा।",
-                    "lucky_number": 1,
-                    "lucky_color": "सफेद",
-                    "lucky_time": "सुबह 8-10 बजे",
-                    "tip": "आज सकारात्मक रहें।"
-                }
-        except Exception:
-            day_data = {
-                "message": "डेटा लोड नहीं हो सका।",
-                "lucky_number": 1,
-                "lucky_color": "सफेद",
-                "lucky_time": "सुबह 8-10 बजे",
-                "tip": "बाद में पुनः प्रयास करें।"
-            }
-
-        result.append({
-            "id": meta["id"],
-            "name": rashi_name,
-            "english": meta["english"],
-            "symbol": meta["symbol"],
-            **day_data
-        })
-
-    return jsonify({"data": result})
-
+    return jsonify({
+        "success": True,
+        "data": get_rashifal_today()
+    })
 
 @app.route('/rashifal/<int:rashi_id>')
 def get_rashifal_by_id(rashi_id):
-    """Return single rashi detail with today's horoscope."""
-    today_day = date.today().day
-    day_index = min(today_day, 30)
-
-    meta = next((r for r in RASHI_META if r["id"] == rashi_id), None)
-    if not meta:
-        return jsonify({"error": "Rashi not found"}), 404
-
-    rashi_name = meta["name"]
-    try:
-        doc = db.collection("rashifal") \
-                .document(rashi_name) \
-                .collection("days") \
-                .document(str(day_index)) \
-                .get()
-
-        if doc.exists:
-            day_data = doc.to_dict()
-        else:
-            day_data = {
-                "message": "आज का राशिफल जल्द उपलब्ध होगा।",
-                "lucky_number": 1,
-                "lucky_color": "सफेद",
-                "lucky_time": "सुबह 8-10 बजे",
-                "tip": "आज सकारात्मक रहें।"
-            }
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-    return jsonify({"data": {
-        "id": meta["id"],
-        "name": rashi_name,
-        "english": meta["english"],
-        "symbol": meta["symbol"],
-        **day_data
-    }})
-
+    rashi = get_single_rashi_today(rashi_id)
+    if rashi:
+        return jsonify({"success": True, "data": rashi})
+    return jsonify({"success": False, "message": "Rashi not found"}), 404
 
 @app.route('/status/<category>')
 def get_status_by_category(category):
-    data = STATUS_DATA.get(category, [])
-    return jsonify({"data": data})
+    data = STATUS_DATA.get(category)
+    if data:
+        return jsonify({"success": True, "category": category, "data": data})
+    return jsonify({"success": False, "message": "Category not found"}), 404
 
+@app.route('/status/categories/all')
+def get_categories():
+    return jsonify({
+        "success": True,
+        "categories": list(STATUS_DATA.keys())
+    })
 
 # ════════════════════════════════════════
 #  RUN
