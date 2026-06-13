@@ -128,7 +128,9 @@ async function showRashiDetail(rashiId) {
 // ===== SHARE RASHIFAL (WITH APP LINK WATERMARK) =====
 function shareRashifal(name, symbol, message, luckyNum, luckyColor) {
     const text = `${symbol} ${name} राशिफल 🌟\n\n${message}\n\n🔢 लकी नंबर: ${luckyNum}\n🎨 लकी रंग: ${luckyColor}${APP_LINK}`;
-    if (navigator.share) {
+    if (window.Android) {
+        Android.shareText(text);
+    } else if (navigator.share) {
         navigator.share({ text: text });
     } else {
         navigator.clipboard.writeText(text);
@@ -182,7 +184,9 @@ function copyStatus(text) {
 // ===== SHARE STATUS (WITH APP LINK WATERMARK) =====
 function shareStatus(text) {
     const fullText = text + APP_LINK;
-    if (navigator.share) {
+    if (window.Android) {
+        Android.shareText(fullText);
+    } else if (navigator.share) {
         navigator.share({ text: fullText });
     } else {
         navigator.clipboard.writeText(fullText);
