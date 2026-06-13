@@ -1,128 +1,202 @@
 from flask import Flask, jsonify, render_template
 from flask_cors import CORS
+from datetime import date
+import firebase_admin
+from firebase_admin import credentials, firestore
+import os
 
 app = Flask(__name__)
 CORS(app)
-# ✅ SAMPLE RASHIFAL DATA (same structure your JS expects)
-rashifal_data = [
-    {"id": 1, "name": "मेष", "english": "Aries", "symbol": "♈",
-     "message": "आज का दिन आपके लिए बहुत शुभ है। नए कार्य की शुरुआत करें।",
-     "lucky_number": 3, "lucky_color": "लाल"},
 
-    {"id": 2, "name": "वृषभ", "english": "Taurus", "symbol": "♉",
-     "message": "धैर्य रखें। आर्थिक मामलों में सावधानी रखें।",
-     "lucky_number": 6, "lucky_color": "नीला"},
+# ════════════════════════════════════════
+#  FIREBASE INIT via Environment Variables
+# ════════════════════════════════════════
 
-    {"id": 3, "name": "मिथुन", "english": "Gemini", "symbol": "♊",
-     "message": "व्यापार में लाभ मिलेगा। परिवार में खुशी का माहौल रहेगा।",
-     "lucky_number": 5, "lucky_color": "हरा"},
+private_key = os.environ.get("FIREBASE_PRIVATE_KEY", "").replace("\\n", "\n")
 
-    {"id": 4, "name": "कर्क", "english": "Cancer", "symbol": "♋",
-     "message": "आज भावनाओं पर नियंत्रण रखें। परिवार का साथ मिलेगा।",
-     "lucky_number": 2, "lucky_color": "पीला"},
+cred = credentials.Certificate({
+    "type": "service_account",
+    "project_id": os.environ.get("FIREBASE_PROJECT_ID"),
+    "private_key_email": os.environ.get("FIREBASE_CLIENT_EMAIL"),
+    "private_key": private_key,
+    "client_email": os.environ.get("FIREBASE_CLIENT_EMAIL"),
+    "token_uri": "https://oauth2.googleapis.com/token",
+})
 
-    {"id": 5, "name": "सिंह", "english": "Leo", "symbol": "♌",
-     "message": "काम में सफलता मिलेगी। आत्मविश्वास बढ़ेगा।",
-     "lucky_number": 1, "lucky_color": "नारंगी"},
+firebase_admin.initialize_app(cred)
+db = firestore.client()
 
-    {"id": 6, "name": "कन्या", "english": "Virgo", "symbol": "♍",
-     "message": "स्वास्थ्य का ध्यान रखें। कोई नया अवसर मिल सकता है।",
-     "lucky_number": 5, "lucky_color": "हरा"},
+# ════════════════════════════════════════
+#  RASHI METADATA
+# ════════════════════════════════════════
 
-    {"id": 7, "name": "तुला", "english": "Libra", "symbol": "♎",
-     "message": "संबंधों में मधुरता आएगी। नया कार्य शुरू कर सकते हैं।",
-     "lucky_number": 6, "lucky_color": "गुलाबी"},
-
-    {"id": 8, "name": "वृश्चिक", "english": "Scorpio", "symbol": "♏",
-     "message": "गुस्से पर नियंत्रण रखें। धन लाभ के योग हैं।",
-     "lucky_number": 9, "lucky_color": "लाल"},
-
-    {"id": 9, "name": "धनु", "english": "Sagittarius", "symbol": "♐",
-     "message": "यात्रा के योग बन रहे हैं। अध्ययन में सफलता मिलेगी।",
-     "lucky_number": 3, "lucky_color": "पीला"},
-
-    {"id": 10, "name": "मकर", "english": "Capricorn", "symbol": "♑",
-     "message": "मेहनत रंग लाएगी। करियर में प्रगति होगी।",
-     "lucky_number": 8, "lucky_color": "काला"},
-
-    {"id": 11, "name": "कुंभ", "english": "Aquarius", "symbol": "♒",
-     "message": "नए अवसर मिलेंगे। मित्रों का सहयोग मिलेगा।",
-     "lucky_number": 4, "lucky_color": "आसमानी"},
-
-    {"id": 12, "name": "मीन", "english": "Pisces", "symbol": "♓",
-     "message": "धैर्य रखें। प्रेम जीवन में सुख मिलेगा।",
-     "lucky_number": 7, "lucky_color": "बैंगनी"}
+RASHI_META = [
+    {"id": 1,  "name": "मेष",      "english": "Aries",       "symbol": "♈"},
+    {"id": 2,  "name": "वृषभ",    "english": "Taurus",      "symbol": "♉"},
+    {"id": 3,  "name": "मिथुन",   "english": "Gemini",      "symbol": "♊"},
+    {"id": 4,  "name": "कर्क",    "english": "Cancer",      "symbol": "♋"},
+    {"id": 5,  "name": "सिंह",    "english": "Leo",         "symbol": "♌"},
+    {"id": 6,  "name": "कन्या",   "english": "Virgo",       "symbol": "♍"},
+    {"id": 7,  "name": "तुला",    "english": "Libra",       "symbol": "♎"},
+    {"id": 8,  "name": "वृश्चिक", "english": "Scorpio",     "symbol": "♏"},
+    {"id": 9,  "name": "धनु",     "english": "Sagittarius", "symbol": "♐"},
+    {"id": 10, "name": "मकर",     "english": "Capricorn",   "symbol": "♑"},
+    {"id": 11, "name": "कुंभ",    "english": "Aquarius",    "symbol": "♒"},
+    {"id": 12, "name": "मीन",     "english": "Pisces",      "symbol": "♓"},
 ]
 
-# ✅ STATUS DATA
-status_data = {
+# ════════════════════════════════════════
+#  STATUS DATA
+# ════════════════════════════════════════
+
+STATUS_DATA = {
     "good_morning": [
         "सुप्रभात! आपका दिन मंगलमय हो 🌞",
-        "हर सुबह एक नई शुरुआत है 💫",
-        "खुश रहो और मुस्कुराते रहो 😊"
+        "हर सुबह एक नई शुरुआत है — इसे बर्बाद मत करो 💫",
+        "खुश रहो, मुस्कुराते रहो, जीवन बहुत खूबसूरत है 😊",
+        "उठो, जागो और अपने सपनों की ओर बढ़ो 🌅",
+        "आज का दिन सिर्फ तुम्हारा है — इसे खास बनाओ ✨",
+    ],
+    "motivational": [
+        "सफलता मेहनत से मिलती है, किस्मत से नहीं 💪",
+        "हार मत मानो, कोशिश जारी रखो — मंजिल दूर नहीं 🔥",
+        "खुद पर विश्वास रखो — तुम जो सोचते हो वो बन सकते हो ✨",
+        "हर दिन एक नया मौका है — इसे गंवाओ मत 🌟",
+        "मेहनत कभी बेकार नहीं जाती — फल जरूर मिलता है 💯",
     ],
     "motivation": [
         "सफलता मेहनत से मिलती है 💪",
         "हार मत मानो, कोशिश जारी रखो 🔥",
-        "खुद पर विश्वास रखो ✨"
-    ],
-    "motivational": [
-        "हर दिन एक नया मौका है 🌟",
-        "मेहनत कभी बेकार नहीं जाती 💯",
-        "सपने वो नहीं जो नींद में आएं 🚀"
+        "खुद पर विश्वास रखो ✨",
     ],
     "love": [
         "प्यार में सब कुछ खूबसूरत लगता है ❤️",
         "तुम्हारी मुस्कान मेरी दुनिया है 😍",
-        "दिल से दिल की बात होती है 💕"
+        "दिल से दिल की बात होती है 💕",
+        "प्यार वो नहीं जो दिखाया जाए, प्यार वो है जो महसूस किया जाए 🌹",
+        "तेरे बिना हर लम्हा अधूरा लगता है 💞",
     ],
     "attitude": [
-        "अपना काम बोलता है 😎",
-        "हम वो हैं जो दिखते हैं 🔥",
-        "जो मेरी परवाह करे, उसकी करता हूँ 👑"
+        "अपना काम बोलता है, हम नहीं 😎",
+        "जो मेरी परवाह करे, उसकी करता हूँ 👑",
+        "हम वो हैं जो दिखते हैं — नकली नहीं 🔥",
+        "तेवर ऐसे कि दुश्मन भी सलाम करे 😤",
+        "अकेले चलना सीखो — भीड़ तो बाद में आती है 🦁",
     ],
     "sad": [
-        "वक्त सब ठीक कर देता है 🌧️",
-        "दर्द भी एक एहसास है 😔",
-        "कभी कभी चुप रहना ही बेहतर होता है 💭"
-    ]
+        "वक्त सब ठीक कर देता है — बस थोड़ा सब्र रखो 🌧️",
+        "दर्द भी एक एहसास है — जो जीना सिखाता है 😔",
+        "कभी कभी चुप रहना ही बेहतर होता है 💭",
+        "टूटे हुए दिल भी एक दिन जुड़ जाते हैं 🖤",
+        "रात कितनी भी काली हो, सुबह जरूर आती है 🌙",
+    ],
 }
 
-# ✅ UI ROUTE
+# ════════════════════════════════════════
+#  ROUTES
+# ════════════════════════════════════════
+
 @app.route('/app')
 def app_ui():
     return render_template('index.html')
 
 
-# ✅ GET ALL RASHIFAL (THIS FIXES YOUR JS)
 @app.route('/rashifal')
 def get_all_rashifal():
-    return jsonify({
-        "data": rashifal_data
-    })
+    """Return all 12 rashis with today's horoscope from Firestore."""
+    today_day = date.today().day  # 1-30/31
+    day_index = min(today_day, 30)  # cap at 30
+
+    result = []
+    for meta in RASHI_META:
+        rashi_name = meta["name"]
+        try:
+            doc = db.collection("rashifal") \
+                    .document(rashi_name) \
+                    .collection("days") \
+                    .document(str(day_index)) \
+                    .get()
+
+            if doc.exists:
+                day_data = doc.to_dict()
+            else:
+                day_data = {
+                    "message": "आज का राशिफल जल्द उपलब्ध होगा।",
+                    "lucky_number": 1,
+                    "lucky_color": "सफेद",
+                    "lucky_time": "सुबह 8-10 बजे",
+                    "tip": "आज सकारात्मक रहें।"
+                }
+        except Exception:
+            day_data = {
+                "message": "डेटा लोड नहीं हो सका।",
+                "lucky_number": 1,
+                "lucky_color": "सफेद",
+                "lucky_time": "सुबह 8-10 बजे",
+                "tip": "बाद में पुनः प्रयास करें।"
+            }
+
+        result.append({
+            "id": meta["id"],
+            "name": rashi_name,
+            "english": meta["english"],
+            "symbol": meta["symbol"],
+            **day_data
+        })
+
+    return jsonify({"data": result})
 
 
-# ✅ GET SINGLE RASHI
 @app.route('/rashifal/<int:rashi_id>')
 def get_rashifal_by_id(rashi_id):
-    for rashi in rashifal_data:
-        if rashi["id"] == rashi_id:
-            return jsonify({"data": rashi})
+    """Return single rashi detail with today's horoscope."""
+    today_day = date.today().day
+    day_index = min(today_day, 30)
 
-    return jsonify({"error": "Not found"}), 404
+    meta = next((r for r in RASHI_META if r["id"] == rashi_id), None)
+    if not meta:
+        return jsonify({"error": "Rashi not found"}), 404
+
+    rashi_name = meta["name"]
+    try:
+        doc = db.collection("rashifal") \
+                .document(rashi_name) \
+                .collection("days") \
+                .document(str(day_index)) \
+                .get()
+
+        if doc.exists:
+            day_data = doc.to_dict()
+        else:
+            day_data = {
+                "message": "आज का राशिफल जल्द उपलब्ध होगा।",
+                "lucky_number": 1,
+                "lucky_color": "सफेद",
+                "lucky_time": "सुबह 8-10 बजे",
+                "tip": "आज सकारात्मक रहें।"
+            }
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    return jsonify({"data": {
+        "id": meta["id"],
+        "name": rashi_name,
+        "english": meta["english"],
+        "symbol": meta["symbol"],
+        **day_data
+    }})
 
 
-# ✅ STATUS API
 @app.route('/status/<category>')
 def get_status_by_category(category):
-    data = status_data.get(category, [])
-    return jsonify({
-        "data": data
-    })
+    data = STATUS_DATA.get(category, [])
+    return jsonify({"data": data})
 
 
-# ✅ RUN
+# ════════════════════════════════════════
+#  RUN
+# ════════════════════════════════════════
+
 if __name__ == '__main__':
-    import os
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
