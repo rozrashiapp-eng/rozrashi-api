@@ -159,13 +159,10 @@ async function loadStatus(category, btnElement) {
                 <div class="status-text">${text}</div>
                 <div class="status-actions">
                     <button class="btn-copy" onclick="copyStatus(\`${text.replace(/`/g, "'")}\`)">
-                        📋 कॉपी
-                    </button>
-                    <button class="btn-share" onclick="shareStatus(\`${text.replace(/`/g, "'")}\`)">
-                        📤 Text
+                        📋 कॉपी करें
                     </button>
                     <button class="btn-image" onclick="openGenerator(\`${text.replace(/`/g, "'")}\`)">
-                        🎨 Image
+                        🎨 Image बनाएं
                     </button>
                 </div>
             `;
