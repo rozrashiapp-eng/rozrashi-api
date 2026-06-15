@@ -583,6 +583,10 @@ def home():
 def app_ui():
     return render_template('index.html')
 
+@app.route('/privacy')
+def privacy_policy():
+    return render_template('privacy.html')
+
 @app.route('/rashifal')
 def get_all_rashifal():
     return jsonify({
