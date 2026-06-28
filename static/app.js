@@ -26,20 +26,22 @@ function showToast(message) {
 }
 
 // ===== SHOW/HIDE SCREENS =====
-function showScreen(screenName) {
-    // Hide all screens
+function showScreen(screenName, addToHistory = true) {
+    // Save current screen to history before switching
+    const currentScreen = document.querySelector('.screen.active');
+    if (addToHistory && currentScreen) {
+        const currentId = currentScreen.id.replace('screen-', '');
+        if (currentId !== screenName) {
+            navHistory.push(currentId);
+            history.pushState(null, '', window.location.href);
+        }
+    }
+
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    // Remove active from all nav buttons
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-
-    // Show selected screen
     document.getElementById('screen-' + screenName).classList.add('active');
-
-    // Highlight nav button
     const navBtn = document.getElementById('nav-' + screenName);
     if (navBtn) navBtn.classList.add('active');
-
-    // Load content for screen
     if (screenName === 'home') loadHome();
     if (screenName === 'rashifal') loadRashifalScreen();
     if (screenName === 'status') loadStatus('good_morning', document.querySelector('#screen-status .tab-btn'));
@@ -792,3 +794,35 @@ function shareImage() {
         }, 'image/jpeg', 0.85);
     }
 }
+
+// ===== BACK NAVIGATION HISTORY =====
+const navHistory = [];
+
+function pushHistory(screenName) {
+    navHistory.push(screenName);
+}
+
+function handleBackPress() {
+    if (navHistory.length > 0) {
+        const previous = navHistory.pop();
+        showScreen(previous);
+        return true; // back handled
+    }
+    return false; // let app close
+}
+
+// Listen for Android back button via WebView
+document.addEventListener('backbutton', function(e) {
+    e.preventDefault();
+    handleBackPress();
+});
+
+// For swipe back gesture (popstate)
+window.addEventListener('popstate', function(e) {
+    if (handleBackPress()) {
+        history.pushState(null, '', window.location.href);
+    }
+});
+
+// Push a dummy state so popstate fires on swipe
+history.pushState(null, '', window.location.href);
