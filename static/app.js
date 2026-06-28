@@ -197,12 +197,13 @@ function shareStatus(text) {
 // ===== LOAD HOME STATUS PREVIEW =====
 async function loadHomeStatusPreview() {
     try {
-        const res = await fetch(`${API_URL}/status/good_morning`);
+        const res = await fetch(
+            `${API_URL}/status/bhakti_quotes`);
         const json = await res.json();
-        const container = document.getElementById('home-status-preview');
+        const container = document.getElementById(
+            'home-status-preview');
         container.innerHTML = '';
 
-        // Show only first 2 statuses on home
         const preview = json.data.slice(0, 2);
         preview.forEach(text => {
             const card = document.createElement('div');
@@ -210,31 +211,31 @@ async function loadHomeStatusPreview() {
             card.innerHTML = `
                 <div class="status-text">${text}</div>
                 <div class="status-actions">
-                    <button class="btn-copy" onclick="copyStatus(\`${text.replace(/`/g, "'")}\`)">
+                    <button class="btn-copy"
+                        onclick="copyStatus(\`${text.replace(/`/g, "'")}\`)">
                         📋 कॉपी करें
                     </button>
-                    <button class="btn-share" onclick="shareStatus(\`${text.replace(/`/g, "'")}\`)">
-                        📤 WhatsApp
+                    <button class="btn-image"
+                        onclick="openGenerator(\`${text.replace(/`/g, "'")}\`)">
+                        🎨 Image बनाएं
                     </button>
                 </div>
             `;
             container.appendChild(card);
         });
 
-        // See all button
         const seeAll = document.createElement('button');
         seeAll.className = 'btn-share';
-        seeAll.style = 'width:100%; padding:12px; border-radius:12px; margin-top:8px; font-size:14px;';
-        seeAll.textContent = '✨ सभी स्टेटस देखें';
+        seeAll.style = 'width:100%;padding:12px;border-radius:12px;margin-top:8px;font-size:14px;';
+        seeAll.textContent = '✨ सभी भक्ति Status देखें';
         seeAll.onclick = () => showScreen('status');
         container.appendChild(seeAll);
 
     } catch (err) {
-        document.getElementById('home-status-preview').innerHTML =
-            '<div class="loading">लोड नहीं हो सकी।</div>';
+        document.getElementById('home-status-preview')
+            .innerHTML = '<div class="loading">लोड नहीं हो सकी।</div>';
     }
 }
-
 // ===== INIT APP =====
 document.addEventListener('DOMContentLoaded', () => {
     setTodayDate();
