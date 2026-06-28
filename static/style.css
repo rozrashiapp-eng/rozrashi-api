@@ -344,7 +344,7 @@ body {
 /* ===== IMAGE CARD GENERATOR ===== */
 .btn-image {
     flex: 1;
-    background: linear-gradient(135deg, #7c3aed, #4c1d95);
+    background: linear-gradient(135deg, #25d366, #128c7e);
     border: none;
     border-radius: 8px;
     padding: 8px;
