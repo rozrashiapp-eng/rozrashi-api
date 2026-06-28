@@ -4,11 +4,164 @@ from rashifal_data import get_rashifal_today, get_single_rashi_today
 from chalisa_data import CHALISA_DATA
 from mantra_data import MANTRA_DATA
 from aarti_data import AARTI_DATA
+from datetime import datetime
 import os
 
 app = Flask(__name__)
 app.json.ensure_ascii = False
 CORS(app)
+
+# ═══════════════════════════════════════
+# CHALISA ROUTES
+# ═══════════════════════════════════════
+
+DAILY_CHALISA = {
+    0: "shiv",      # Monday
+    1: "hanuman",   # Tuesday
+    2: "ganesh",    # Wednesday
+    3: "laxmi",     # Thursday
+    4: "durga",     # Friday
+    5: "shani",     # Saturday
+    6: "surya",     # Sunday
+}
+
+@app.route('/chalisa/today')
+def get_today_chalisa():
+    day = datetime.now().weekday()
+    key = DAILY_CHALISA[day]
+    chalisa = CHALISA_DATA.get(key)
+    return jsonify({
+        "success": True,
+        "day_index": day,
+        "key": key,
+        "data": chalisa
+    })
+
+@app.route('/chalisa/all')
+def get_all_chalisas():
+    result = []
+    for key, value in CHALISA_DATA.items():
+        result.append({
+            "key": key,
+            "name": value["name"],
+            "god": value["god"],
+            "day": value["day"],
+            "symbol": value["symbol"],
+            "benefit": value["benefit"],
+            "verse_count": len(value["verses"])
+        })
+    return jsonify({"success": True, "data": result})
+
+@app.route('/chalisa/<name>')
+def get_chalisa(name):
+    chalisa = CHALISA_DATA.get(name)
+    if chalisa:
+        return jsonify({"success": True, "data": chalisa})
+    return jsonify({
+        "success": False,
+        "message": "Chalisa not found"
+    }), 404
+
+# ═══════════════════════════════════════
+# AARTI ROUTES
+# ═══════════════════════════════════════
+
+DAILY_AARTI = {
+    0: "shiv",      # Monday
+    1: "hanuman",   # Tuesday
+    2: "ganesh",    # Wednesday
+    3: "vishnu",    # Thursday
+    4: "durga",     # Friday
+    5: "shani",     # Saturday
+    6: "surya",     # Sunday
+}
+
+@app.route('/aarti/today')
+def get_today_aarti():
+    day = datetime.now().weekday()
+    key = DAILY_AARTI[day]
+    aarti = AARTI_DATA.get(key)
+    return jsonify({
+        "success": True,
+        "day_index": day,
+        "key": key,
+        "data": aarti
+    })
+
+@app.route('/aarti/all')
+def get_all_aartis():
+    result = []
+    for key, value in AARTI_DATA.items():
+        result.append({
+            "key": key,
+            "name": value["name"],
+            "god": value["god"],
+            "day": value["day"],
+            "symbol": value["symbol"],
+            "benefit": value["benefit"],
+            "verse_count": len(value["verses"])
+        })
+    return jsonify({"success": True, "data": result})
+
+@app.route('/aarti/<name>')
+def get_aarti(name):
+    aarti = AARTI_DATA.get(name)
+    if aarti:
+        return jsonify({"success": True, "data": aarti})
+    return jsonify({
+        "success": False,
+        "message": "Aarti not found"
+    }), 404
+
+# ═══════════════════════════════════════
+# MANTRA ROUTES
+# ═══════════════════════════════════════
+
+DAYS_MAP = {
+    0: "monday",
+    1: "tuesday",
+    2: "wednesday",
+    3: "thursday",
+    4: "friday",
+    5: "saturday",
+    6: "sunday"
+}
+
+@app.route('/mantra/today')
+def get_today_mantra():
+    day = datetime.now().weekday()
+    key = DAYS_MAP[day]
+    mantra = MANTRA_DATA.get(key)
+    return jsonify({
+        "success": True,
+        "day_index": day,
+        "key": key,
+        "data": mantra
+    })
+
+@app.route('/mantra/all')
+def get_all_mantras():
+    result = []
+    for key, value in MANTRA_DATA.items():
+        result.append({
+            "key": key,
+            "day": value["day"],
+            "god": value["god"],
+            "symbol": value["symbol"],
+            "benefit": value["benefit"],
+            "mantra_count": len(value["mantras"])
+        })
+    return jsonify({"success": True, "data": result})
+
+@app.route('/mantra/<day>')
+def get_mantra(day):
+    mantra = MANTRA_DATA.get(day)
+    if mantra:
+        return jsonify({"success": True, "data": mantra})
+    return jsonify({
+        "success": False,
+        "message": "Mantra not found"
+    }), 404
 
 
 # ════════════════════════════════════════
