@@ -8,8 +8,8 @@
 
 body {
     font-family: 'Hind', sans-serif;
-    background-color: #0f0f1a;
-    color: #ffffff;
+    background-color: #FFF8F0;
+    color: #2D1B00;
     max-width: 480px;
     margin: 0 auto;
     min-height: 100vh;
@@ -18,7 +18,7 @@ body {
 
 /* ===== TOP HEADER ===== */
 .header {
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    background: linear-gradient(135deg, #FF6B00, #F4820A);
     padding: 15px 20px;
     display: flex;
     align-items: center;
@@ -26,7 +26,7 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
-    border-bottom: 1px solid #2a2a4a;
+    border-bottom: 1px solid #FFD49A;
 }
 
 .header h1 {
@@ -39,7 +39,7 @@ body {
 
 .header .date {
     font-size: 12px;
-    color: #8888aa;
+    color: #8B5E0A;
 }
 
 /* ===== SCREENS ===== */
@@ -55,7 +55,7 @@ body {
 
 /* ===== HOME SCREEN ===== */
 .welcome-card {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #FF6B00, #F4820A);
     border-radius: 16px;
     padding: 20px;
     margin-bottom: 20px;
@@ -89,8 +89,8 @@ body {
 }
 
 .rashi-mini-card {
-    background: #1a1a2e;
-    border: 1px solid #2a2a4a;
+    background: #FFF0E0;
+    border: 1px solid #FFD49A;
     border-radius: 12px;
     padding: 12px 8px;
     text-align: center;
@@ -112,21 +112,21 @@ body {
 .rashi-mini-card .name {
     font-size: 13px;
     font-weight: 600;
-    color: #ffffff;
+    color: #2D1B00;
 }
 
 .rashi-mini-card .english {
     font-size: 10px;
-    color: #8888aa;
+    color: #8B6914;
 }
 
 /* ===== RASHI DETAIL ===== */
 .rashi-detail-card {
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    background: linear-gradient(135deg, #FFF0E0, #FFF8F0);
     border-radius: 16px;
     padding: 24px;
     text-align: center;
-    border: 1px solid #2a2a4a;
+    border: 1px solid #FFD49A;
     margin-bottom: 16px;
 }
 
@@ -152,9 +152,9 @@ body {
 .rashi-detail-card .message {
     font-size: 16px;
     line-height: 1.7;
-    color: #ddddff;
+    color: #2D1B00;
     text-align: left;
-    background: #0f0f1a;
+    background: #FFF0E0;
     padding: 16px;
     border-radius: 12px;
     margin-bottom: 16px;
@@ -168,11 +168,11 @@ body {
 }
 
 .lucky-badge {
-    background: #2a2a4a;
+    background: #FFD49A;
     border-radius: 20px;
     padding: 6px 14px;
     font-size: 13px;
-    color: #ffd200;
+    color: #7A3B00;
 }
 
 /* ===== STATUS SCREEN ===== */
@@ -190,12 +190,12 @@ body {
 }
 
 .tab-btn {
-    background: #1a1a2e;
-    border: 1px solid #2a2a4a;
+    background: #FFF0E0;
+    border: 1px solid #FFD49A;
     border-radius: 20px;
     padding: 7px 16px;
     font-size: 13px;
-    color: #8888aa;
+    color: #8B6914;
     cursor: pointer;
     white-space: nowrap;
     font-family: 'Hind', sans-serif;
@@ -211,8 +211,8 @@ body {
 
 /* ===== STATUS CARDS ===== */
 .status-card {
-    background: #1a1a2e;
-    border: 1px solid #2a2a4a;
+    background: #FFF0E0;
+    border: 1px solid #FFD49A;
     border-radius: 14px;
     padding: 16px;
     margin-bottom: 12px;
@@ -222,7 +222,7 @@ body {
 .status-card .status-text {
     font-size: 15px;
     line-height: 1.7;
-    color: #ffffff;
+    color: #2D1B00;
     margin-bottom: 12px;
 }
 
@@ -233,11 +233,11 @@ body {
 
 .btn-copy {
     flex: 1;
-    background: #2a2a4a;
+    background: #FFD49A;
     border: none;
     border-radius: 8px;
     padding: 8px;
-    color: #ffffff;
+    color: #2D1B00;
     font-size: 13px;
     cursor: pointer;
     font-family: 'Hind', sans-serif;
@@ -263,11 +263,11 @@ body {
 
 /* ===== BACK BUTTON ===== */
 .back-btn {
-    background: #2a2a4a;
+    background: #FFD49A;
     border: none;
     border-radius: 8px;
     padding: 8px 14px;
-    color: #ffffff;
+    color: #2D1B00;
     font-size: 13px;
     cursor: pointer;
     margin-bottom: 16px;
@@ -282,8 +282,8 @@ body {
     transform: translateX(-50%);
     width: 100%;
     max-width: 480px;
-    background: #1a1a2e;
-    border-top: 1px solid #2a2a4a;
+    background: #FFF0E0;
+    border-top: 1px solid #FFD49A;
     display: flex;
     justify-content: space-around;
     padding: 8px 0;
@@ -309,7 +309,7 @@ body {
 
 .nav-btn .nav-label {
     font-size: 10px;
-    color: #8888aa;
+    color: #8B6914;
     font-family: 'Hind', sans-serif;
 }
 

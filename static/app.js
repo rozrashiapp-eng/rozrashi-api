@@ -430,12 +430,6 @@ async function showAartiDetail(key) {
                     <div style="font-size:12px; color:#94a3b8; margin-top:8px; font-style:italic;">
                         📝 ${v.meaning}
                     </div>
-                    <div class="status-actions" style="margin-top:8px;">
-                        <button class="btn-copy"
-                            onclick="copyStatus(\`${v.text.replace(/`/g, "'")}\`)">
-                            📋 कॉपी करें
-                        </button>
-                    </div>
                 </div>
             `;
         });
@@ -557,12 +551,6 @@ async function showMantraDetail(key) {
                     </div>
                     <div style="font-size:11px; color:#86efac; margin-top:6px;">
                         🔢 जाप: ${mantra.jaap_count} बार | ✨ ${mantra.benefit}
-                    </div>
-                    <div class="status-actions" style="margin-top:8px;">
-                        <button class="btn-copy"
-                            onclick="copyStatus(\`${mantra.mantra.replace(/`/g, "'")}\`)">
-                            📋 कॉपी करें
-                        </button>
                     </div>
                 </div>
             `;
