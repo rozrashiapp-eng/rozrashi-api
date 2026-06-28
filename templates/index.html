@@ -131,6 +131,59 @@
 
 </div> <!-- closes screen-status -->
 <!-- ===== BOTTOM NAVIGATION ===== -->
+</div> <!-- closes screen-status -->
+
+<!-- ===== CHALISA SCREEN ===== -->
+<div class="screen" id="screen-chalisa">
+    <div class="section-title">📿 चालीसा</div>
+    <div class="category-tabs">
+        <button class="tab-btn active" onclick="loadChalisaList(this)">📋 सभी चालीसा</button>
+        <button class="tab-btn" onclick="loadTodayChalisa(this)">⭐ आज की चालीसा</button>
+    </div>
+    <div id="chalisa-list">
+        <div class="loading">चालीसा लोड हो रही है...</div>
+    </div>
+</div>
+
+<!-- ===== CHALISA DETAIL SCREEN ===== -->
+<div class="screen" id="screen-chalisa-detail">
+    <button class="back-btn" onclick="goBackToChalisa()">← वापस जाएं</button>
+    <div id="chalisa-detail-content">
+        <div class="loading">लोड हो रही है...</div>
+    </div>
+</div>
+
+<!-- ===== AARTI SCREEN ===== -->
+<div class="screen" id="screen-aarti">
+    <div class="section-title">🪔 आरती</div>
+    <div class="category-tabs">
+        <button class="tab-btn active" onclick="loadAartiList(this)">📋 सभी आरती</button>
+        <button class="tab-btn" onclick="loadTodayAarti(this)">⭐ आज की आरती</button>
+    </div>
+    <div id="aarti-list">
+        <div class="loading">आरती लोड हो रही है...</div>
+    </div>
+</div>
+
+<!-- ===== AARTI DETAIL SCREEN ===== -->
+<div class="screen" id="screen-aarti-detail">
+    <button class="back-btn" onclick="goBackToAarti()">← वापस जाएं</button>
+    <div id="aarti-detail-content">
+        <div class="loading">लोड हो रही है...</div>
+    </div>
+</div>
+
+<!-- ===== MANTRA SCREEN ===== -->
+<div class="screen" id="screen-mantra">
+    <div class="section-title">🕉️ मंत्र</div>
+    <div class="category-tabs">
+        <button class="tab-btn active" onclick="loadMantraList(this)">📋 सभी मंत्र</button>
+        <button class="tab-btn" onclick="loadTodayMantra(this)">⭐ आज के मंत्र</button>
+    </div>
+    <div id="mantra-list">
+        <div class="loading">मंत्र लोड हो रही है...</div>
+    </div>
+</div>
 
 <div class="bottom-nav">
     <button class="nav-btn active" id="nav-home" onclick="showScreen('home')">
@@ -141,11 +194,23 @@
         <span class="nav-icon">🔮</span>
         <span class="nav-label">राशिफल</span>
     </button>
+    <button class="nav-btn" id="nav-chalisa" onclick="showScreen('chalisa')">
+        <span class="nav-icon">📿</span>
+        <span class="nav-label">चालीसा</span>
+    </button>
+    <button class="nav-btn" id="nav-aarti" onclick="showScreen('aarti')">
+        <span class="nav-icon">🪔</span>
+        <span class="nav-label">आरती</span>
+    </button>
+    <button class="nav-btn" id="nav-mantra" onclick="showScreen('mantra')">
+        <span class="nav-icon">🕉️</span>
+        <span class="nav-label">मंत्र</span>
+    </button>
     <button class="nav-btn" id="nav-status" onclick="showScreen('status')">
         <span class="nav-icon">💬</span>
         <span class="nav-label">स्टेटस</span>
     </button>
 </div>
-    <script src="/static/app.js"></script>
+<script src="/static/app.js"></script>
 </body>
 </html>

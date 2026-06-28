@@ -42,8 +42,10 @@ function showScreen(screenName) {
     // Load content for screen
     if (screenName === 'home') loadHome();
     if (screenName === 'rashifal') loadRashifalScreen();
-    if (screenName === 'status') loadStatus('good_morning', document.querySelector('.tab-btn'));
-
+    if (screenName === 'status') loadStatus('good_morning', document.querySelector('#screen-status .tab-btn'));
+    if (screenName === 'chalisa') loadChalisaList(document.querySelector('#screen-chalisa .tab-btn'));
+    if (screenName === 'aarti') loadAartiList(document.querySelector('#screen-aarti .tab-btn'));
+    if (screenName === 'mantra') loadMantraList(document.querySelector('#screen-mantra .tab-btn'));
     previousScreen = screenName;
 }
 
@@ -236,6 +238,342 @@ async function loadHomeStatusPreview() {
             .innerHTML = '<div class="loading">लोड नहीं हो सकी।</div>';
     }
 }
+
+// ===== CHALISA FUNCTIONS =====
+
+async function loadChalisaList(btnElement) {
+    document.querySelectorAll('#screen-chalisa .tab-btn')
+        .forEach(b => b.classList.remove('active'));
+    if (btnElement) btnElement.classList.add('active');
+
+    const container = document.getElementById('chalisa-list');
+    container.innerHTML = '<div class="loading">लोड हो रही है...</div>';
+
+    try {
+        const res = await fetch(`${API_URL}/chalisa/all`);
+        const json = await res.json();
+        container.innerHTML = '';
+
+        json.data.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'rashi-mini-card';
+            card.style = 'text-align:center; cursor:pointer;';
+            card.innerHTML = `
+                <span class="symbol">${item.symbol}</span>
+                <div class="name">${item.name}</div>
+                <div class="english" style="font-size:11px;">${item.god}</div>
+                <div class="english" style="font-size:10px; opacity:0.7;">${item.day}</div>
+            `;
+            card.onclick = () => showChalisaDetail(item.key);
+            container.appendChild(card);
+        });
+    } catch (err) {
+        container.innerHTML = '<div class="loading">लोड नहीं हो सकी।</div>';
+    }
+}
+
+async function loadTodayChalisa(btnElement) {
+    document.querySelectorAll('#screen-chalisa .tab-btn')
+        .forEach(b => b.classList.remove('active'));
+    if (btnElement) btnElement.classList.add('active');
+
+    const container = document.getElementById('chalisa-list');
+    container.innerHTML = '<div class="loading">लोड हो रही है...</div>';
+
+    try {
+        const res = await fetch(`${API_URL}/chalisa/today`);
+        const json = await res.json();
+        container.innerHTML = '';
+
+        const item = json.data;
+        const card = document.createElement('div');
+        card.className = 'rashi-mini-card';
+        card.style = 'text-align:center; cursor:pointer;';
+        card.innerHTML = `
+            <span class="symbol">${item.symbol}</span>
+            <div class="name">${item.name}</div>
+            <div class="english">${item.god}</div>
+            <div class="english" style="font-size:10px;">${item.day}</div>
+        `;
+        card.onclick = () => showChalisaDetail(json.key);
+        container.appendChild(card);
+    } catch (err) {
+        container.innerHTML = '<div class="loading">लोड नहीं हो सकी।</div>';
+    }
+}
+
+async function showChalisaDetail(key) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-chalisa-detail').classList.add('active');
+
+    const content = document.getElementById('chalisa-detail-content');
+    content.innerHTML = '<div class="loading">चालीसा लोड हो रही है...</div>';
+
+    try {
+        const res = await fetch(`${API_URL}/chalisa/${key}`);
+        const json = await res.json();
+        const c = json.data;
+
+        let versesHTML = '';
+        c.verses.forEach(v => {
+            versesHTML += `
+                <div class="status-card" style="margin-bottom:12px;">
+                    <div style="font-size:11px; color:#a78bfa; margin-bottom:6px; font-weight:bold;">
+                        ${v.type === 'doha' ? '📖 दोहा' : `🔢 चौपाई ${v.id}`}
+                    </div>
+                    <div class="status-text" style="font-size:16px; line-height:1.9;">${v.text}</div>
+                    <div style="font-size:12px; color:#94a3b8; margin-top:8px; font-style:italic;">
+                        📝 ${v.meaning}
+                    </div>
+                </div>
+            `;
+        });
+
+        content.innerHTML = `
+            <div class="rashi-detail-card" style="text-align:center; margin-bottom:16px;">
+                <span class="big-symbol">${c.symbol}</span>
+                <h2>${c.name}</h2>
+                <div class="english-name">${c.god} • ${c.day}</div>
+                <div class="message" style="font-size:13px;">✨ ${c.benefit}</div>
+            </div>
+            ${versesHTML}
+        `;
+    } catch (err) {
+        content.innerHTML = '<div class="loading">लोड नहीं हो सकी।</div>';
+    }
+}
+
+function goBackToChalisa() {
+    showScreen('chalisa');
+}
+
+// ===== AARTI FUNCTIONS =====
+
+async function loadAartiList(btnElement) {
+    document.querySelectorAll('#screen-aarti .tab-btn')
+        .forEach(b => b.classList.remove('active'));
+    if (btnElement) btnElement.classList.add('active');
+
+    const container = document.getElementById('aarti-list');
+    container.innerHTML = '<div class="loading">लोड हो रही है...</div>';
+
+    try {
+        const res = await fetch(`${API_URL}/aarti/all`);
+        const json = await res.json();
+        container.innerHTML = '';
+
+        json.data.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'rashi-mini-card';
+            card.style = 'text-align:center; cursor:pointer;';
+            card.innerHTML = `
+                <span class="symbol">${item.symbol}</span>
+                <div class="name">${item.name}</div>
+                <div class="english" style="font-size:11px;">${item.god}</div>
+                <div class="english" style="font-size:10px; opacity:0.7;">${item.day}</div>
+            `;
+            card.onclick = () => showAartiDetail(item.key);
+            container.appendChild(card);
+        });
+    } catch (err) {
+        container.innerHTML = '<div class="loading">लोड नहीं हो सकी।</div>';
+    }
+}
+
+async function loadTodayAarti(btnElement) {
+    document.querySelectorAll('#screen-aarti .tab-btn')
+        .forEach(b => b.classList.remove('active'));
+    if (btnElement) btnElement.classList.add('active');
+
+    const container = document.getElementById('aarti-list');
+    container.innerHTML = '<div class="loading">लोड हो रही है...</div>';
+
+    try {
+        const res = await fetch(`${API_URL}/aarti/today`);
+        const json = await res.json();
+        container.innerHTML = '';
+
+        const item = json.data;
+        const card = document.createElement('div');
+        card.className = 'rashi-mini-card';
+        card.style = 'text-align:center; cursor:pointer;';
+        card.innerHTML = `
+            <span class="symbol">${item.symbol}</span>
+            <div class="name">${item.name}</div>
+            <div class="english">${item.god}</div>
+            <div class="english" style="font-size:10px;">${item.day}</div>
+        `;
+        card.onclick = () => showAartiDetail(json.key);
+        container.appendChild(card);
+    } catch (err) {
+        container.innerHTML = '<div class="loading">लोड नहीं हो सकी।</div>';
+    }
+}
+
+async function showAartiDetail(key) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-aarti-detail').classList.add('active');
+
+    const content = document.getElementById('aarti-detail-content');
+    content.innerHTML = '<div class="loading">आरती लोड हो रही है...</div>';
+
+    try {
+        const res = await fetch(`${API_URL}/aarti/${key}`);
+        const json = await res.json();
+        const a = json.data;
+
+        let versesHTML = '';
+        a.verses.forEach(v => {
+            versesHTML += `
+                <div class="status-card" style="margin-bottom:12px;">
+                    <div class="status-text" style="font-size:16px; line-height:2.0;">${v.text}</div>
+                    <div style="font-size:12px; color:#94a3b8; margin-top:8px; font-style:italic;">
+                        📝 ${v.meaning}
+                    </div>
+                    <div class="status-actions" style="margin-top:8px;">
+                        <button class="btn-copy"
+                            onclick="copyStatus(\`${v.text.replace(/`/g, "'")}\`)">
+                            📋 कॉपी करें
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+
+        content.innerHTML = `
+            <div class="rashi-detail-card" style="text-align:center; margin-bottom:16px;">
+                <span class="big-symbol">${a.symbol}</span>
+                <h2>${a.name}</h2>
+                <div class="english-name">${a.god} • ${a.day}</div>
+                <div class="message" style="font-size:13px;">✨ ${a.benefit}</div>
+            </div>
+            ${versesHTML}
+        `;
+    } catch (err) {
+        content.innerHTML = '<div class="loading">लोड नहीं हो सकी।</div>';
+    }
+}
+
+function goBackToAarti() {
+    showScreen('aarti');
+}
+
+// ===== MANTRA FUNCTIONS =====
+
+async function loadMantraList(btnElement) {
+    document.querySelectorAll('#screen-mantra .tab-btn')
+        .forEach(b => b.classList.remove('active'));
+    if (btnElement) btnElement.classList.add('active');
+
+    const container = document.getElementById('mantra-list');
+    container.innerHTML = '<div class="loading">लोड हो रही है...</div>';
+
+    try {
+        const res = await fetch(`${API_URL}/mantra/all`);
+        const json = await res.json();
+        container.innerHTML = '';
+
+        json.data.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'rashi-mini-card';
+            card.style = 'text-align:center; cursor:pointer;';
+            card.innerHTML = `
+                <span class="symbol">${item.symbol}</span>
+                <div class="name">${item.day}</div>
+                <div class="english" style="font-size:11px;">${item.god}</div>
+            `;
+            card.onclick = () => showMantraDetail(item.key);
+            container.appendChild(card);
+        });
+    } catch (err) {
+        container.innerHTML = '<div class="loading">लोड नहीं हो सकी।</div>';
+    }
+}
+
+async function loadTodayMantra(btnElement) {
+    document.querySelectorAll('#screen-mantra .tab-btn')
+        .forEach(b => b.classList.remove('active'));
+    if (btnElement) btnElement.classList.add('active');
+
+    const container = document.getElementById('mantra-list');
+    container.innerHTML = '<div class="loading">लोड हो रही है...</div>';
+
+    try {
+        const res = await fetch(`${API_URL}/mantra/today`);
+        const json = await res.json();
+        showMantraDetail(json.key);
+    } catch (err) {
+        container.innerHTML = '<div class="loading">लोड नहीं हो सकी।</div>';
+    }
+}
+
+async function showMantraDetail(key) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+
+    // reuse mantra screen itself for detail
+    document.getElementById('screen-mantra').classList.add('active');
+    document.getElementById('nav-mantra').classList.add('active');
+
+    const container = document.getElementById('mantra-list');
+    container.innerHTML = '<div class="loading">मंत्र लोड हो रही है...</div>';
+
+    try {
+        const res = await fetch(`${API_URL}/mantra/${key}`);
+        const json = await res.json();
+        const m = json.data;
+
+        let mantrasHTML = `
+            <div class="rashi-detail-card" style="text-align:center; margin-bottom:16px;">
+                <span class="big-symbol">${m.symbol}</span>
+                <h2>${m.day} के मंत्र</h2>
+                <div class="english-name">${m.god}</div>
+                <div class="message" style="font-size:13px;">✨ ${m.benefit}</div>
+            </div>
+            <button class="btn-share"
+                style="width:100%;padding:10px;border-radius:12px;
+                       margin-bottom:12px;font-size:13px;"
+                onclick="loadMantraList(null)">
+                ← सभी दिन के मंत्र देखें
+            </button>
+        `;
+
+        m.mantras.forEach(mantra => {
+            mantrasHTML += `
+                <div class="status-card" style="margin-bottom:14px;">
+                    <div style="font-size:13px; color:#a78bfa;
+                                font-weight:bold; margin-bottom:8px;">
+                        🕉️ ${mantra.title}
+                    </div>
+                    <div class="status-text"
+                         style="font-size:17px; line-height:2.0; color:#ffd200;">
+                        ${mantra.mantra}
+                    </div>
+                    <div style="font-size:12px; color:#94a3b8;
+                                margin-top:6px; font-style:italic;">
+                        🔤 ${mantra.transliteration}
+                    </div>
+                    <div style="font-size:12px; color:#c4b5fd; margin-top:6px;">
+                        📝 ${mantra.meaning}
+                    </div>
+                    <div style="font-size:11px; color:#86efac; margin-top:6px;">
+                        🔢 जाप: ${mantra.jaap_count} बार | ✨ ${mantra.benefit}
+                    </div>
+                    <div class="status-actions" style="margin-top:8px;">
+                        <button class="btn-copy"
+                            onclick="copyStatus(\`${mantra.mantra.replace(/`/g, "'")}\`)">
+                            📋 कॉपी करें
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = mantrasHTML;
+    } catch (err) {
+        container.innerHTML = '<div class="loading">लोड नहीं हो सकी।</div>';
+    }
+}
+
 // ===== INIT APP =====
 document.addEventListener('DOMContentLoaded', () => {
     setTodayDate();
