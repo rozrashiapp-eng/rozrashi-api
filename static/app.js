@@ -49,7 +49,7 @@ function showScreen(screenName) {
 
 // ===== GO BACK =====
 function goBack() {
-    showScreen(previousScreen === 'rashi-detail' ? 'rashifal' : previousScreen);
+    showScreen('rashifal');
 }
 
 // ===== LOAD HOME SCREEN =====
