@@ -5,6 +5,8 @@ from chalisa_data import CHALISA_DATA
 from mantra_data import MANTRA_DATA
 from aarti_data import AARTI_DATA
 from datetime import datetime
+import pytz
+IST = pytz.timezone('Asia/Kolkata')
 import os
 
 app = Flask(__name__)
@@ -27,7 +29,7 @@ DAILY_CHALISA = {
 
 @app.route('/chalisa/today')
 def get_today_chalisa():
-    day = datetime.now().weekday()
+    day = datetime.now(IST).weekday()
     key = DAILY_CHALISA[day]
     chalisa = CHALISA_DATA.get(key)
     return jsonify({
@@ -78,7 +80,7 @@ DAILY_AARTI = {
 
 @app.route('/aarti/today')
 def get_today_aarti():
-    day = datetime.now().weekday()
+    day = datetime.now(IST).weekday()
     key = DAILY_AARTI[day]
     aarti = AARTI_DATA.get(key)
     return jsonify({
@@ -129,7 +131,7 @@ DAYS_MAP = {
 
 @app.route('/mantra/today')
 def get_today_mantra():
-    day = datetime.now().weekday()
+    day = datetime.now(IST).weekday()
     key = DAYS_MAP[day]
     mantra = MANTRA_DATA.get(key)
     return jsonify({

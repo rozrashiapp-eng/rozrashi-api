@@ -160,11 +160,8 @@ async function loadStatus(category, btnElement) {
             card.innerHTML = `
                 <div class="status-text">${text}</div>
                 <div class="status-actions">
-                    <button class="btn-copy" onclick="copyStatus(\`${text.replace(/`/g, "'")}\`)">
-                        📋 कॉपी करें
-                    </button>
-                    <button class="btn-image" onclick="openGenerator(\`${text.replace(/`/g, "'")}\`)">
-                        🎨 Image बनाएं
+                    <button class="btn-image" style="flex:1" onclick="openGenerator(\`${text.replace(/`/g, "'")}\`)">
+                        📤 WhatsApp / Share
                     </button>
                 </div>
             `;
@@ -213,13 +210,8 @@ async function loadHomeStatusPreview() {
             card.innerHTML = `
                 <div class="status-text">${text}</div>
                 <div class="status-actions">
-                    <button class="btn-copy"
-                        onclick="copyStatus(\`${text.replace(/`/g, "'")}\`)">
-                        📋 कॉपी करें
-                    </button>
-                    <button class="btn-image"
-                        onclick="openGenerator(\`${text.replace(/`/g, "'")}\`)">
-                        🎨 Image बनाएं
+                    <button class="btn-image" style="flex:1" onclick="openGenerator(\`${text.replace(/`/g, "'")}\`)">
+                        📤 WhatsApp / Share
                     </button>
                 </div>
             `;
@@ -318,7 +310,7 @@ async function showChalisaDetail(key) {
         c.verses.forEach(v => {
             versesHTML += `
                 <div class="status-card" style="margin-bottom:12px;">
-                    <div style="font-size:11px; color:#a78bfa; margin-bottom:6px; font-weight:bold;">
+                    <div style="font-size:11px; color:#FF6B00; margin-bottom:6px; font-weight:bold;">
                         ${v.type === 'doha' ? '📖 दोहा' : `🔢 चौपाई ${v.id}`}
                     </div>
                     <div class="status-text" style="font-size:16px; line-height:1.9;">${v.text}</div>
@@ -523,7 +515,7 @@ async function showMantraDetail(key) {
                 <div class="english-name">${m.god}</div>
                 <div class="message" style="font-size:13px;">✨ ${m.benefit}</div>
             </div>
-            <button class="btn-share"
+            <button class="btn-copy"
                 style="width:100%;padding:10px;border-radius:12px;
                        margin-bottom:12px;font-size:13px;"
                 onclick="loadMantraList(null)">
@@ -534,23 +526,29 @@ async function showMantraDetail(key) {
         m.mantras.forEach(mantra => {
             mantrasHTML += `
                 <div class="status-card" style="margin-bottom:14px;">
-                    <div style="font-size:13px; color:#a78bfa;
+                    <div style="font-size:13px; color:#FF6B00;
                                 font-weight:bold; margin-bottom:8px;">
                         🕉️ ${mantra.title}
                     </div>
                     <div class="status-text"
-                         style="font-size:17px; line-height:2.0; color:#ffd200;">
+                         style="font-size:17px; line-height:2.0; color:#CC5500;">
                         ${mantra.mantra}
                     </div>
-                    <div style="font-size:12px; color:#94a3b8;
+                    <div style="font-size:12px; color:#8B6914;
                                 margin-top:6px; font-style:italic;">
                         🔤 ${mantra.transliteration}
                     </div>
-                    <div style="font-size:12px; color:#c4b5fd; margin-top:6px;">
+                    <div style="font-size:12px; color:#5C3D00; margin-top:6px;">
                         📝 ${mantra.meaning}
                     </div>
-                    <div style="font-size:11px; color:#86efac; margin-top:6px;">
+                    <div style="font-size:11px; color:#2D6A2D; margin-top:6px;">
                         🔢 जाप: ${mantra.jaap_count} बार | ✨ ${mantra.benefit}
+                    </div>
+                    <div class="status-actions" style="margin-top:10px;">
+                        <button class="btn-image" style="flex:1"
+                            onclick="openGenerator(\`${mantra.mantra.replace(/`/g, "'")}\`)">
+                            📤 WhatsApp / Share
+                        </button>
                     </div>
                 </div>
             `;
