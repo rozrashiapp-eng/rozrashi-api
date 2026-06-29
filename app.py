@@ -8,6 +8,8 @@ from datetime import datetime
 import pytz
 IST = pytz.timezone('Asia/Kolkata')
 import os
+import requests
+from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
 app.json.ensure_ascii = False
@@ -541,6 +543,128 @@ STATUS_DATA = {
 }
 
 # ════════════════════════════════════════
+#  NOTIFICATION DATA
+# ════════════════════════════════════════
+
+HINDI_DAYS = {
+    0: "सोमवार",
+    1: "मंगलवार",
+    2: "बुधवार",
+    3: "गुरुवार",
+    4: "शुक्रवार",
+    5: "शनिवार",
+    6: "रविवार"
+}
+
+CHALISA_INFO = {
+    0: {"name": "शिव चालीसा",     "god": "भगवान शिव",   "emoji": "🔱"},
+    1: {"name": "हनुमान चालीसा",  "god": "हनुमान जी",   "emoji": "🙏"},
+    2: {"name": "गणेश चालीसा",    "god": "गणेश जी",     "emoji": "🐘"},
+    3: {"name": "लक्ष्मी चालीसा", "god": "माँ लक्ष्मी", "emoji": "🪷"},
+    4: {"name": "दुर्गा चालीसा",  "god": "माँ दुर्गा",  "emoji": "🌺"},
+    5: {"name": "शनि चालीसा",     "god": "शनि देव",     "emoji": "⚫"},
+    6: {"name": "सूर्य चालीसा",   "god": "सूर्य देव",   "emoji": "☀️"},
+}
+
+AARTI_INFO = {
+    0: {"name": "शिव जी की आरती",    "emoji": "🔱"},
+    1: {"name": "हनुमान जी की आरती", "emoji": "🙏"},
+    2: {"name": "गणेश जी की आरती",   "emoji": "🐘"},
+    3: {"name": "विष्णु जी की आरती", "emoji": "🪷"},
+    4: {"name": "दुर्गा जी की आरती", "emoji": "🌺"},
+    5: {"name": "शनि जी की आरती",    "emoji": "⚫"},
+    6: {"name": "सूर्य जी की आरती",  "emoji": "☀️"},
+}
+
+# ════════════════════════════════════════
+#  NOTIFICATION FUNCTIONS
+# ════════════════════════════════════════
+
+def send_onesignal_notification(title, message):
+    headers = {
+        "Authorization": f"Basic {os.environ.get('ONESIGNAL_API_KEY')}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "app_id": os.environ.get("ONESIGNAL_APP_ID"),
+        "included_segments": ["All"],
+        "headings": {"en": title, "hi": title},
+        "contents": {"en": message, "hi": message},
+        "small_icon": "ic_stat_onesignal_default"
+    }
+    try:
+        response = requests.post(
+            "https://onesignal.com/api/v1/notifications",
+            json=payload,
+            headers=headers
+        )
+        print(f"Notification sent: {response.status_code}")
+        return response.json()
+    except Exception as e:
+        print(f"Notification error: {e}")
+        return None
+
+
+def send_morning_notification():
+    """6:00 AM - Good Morning + Rashifal"""
+    send_onesignal_notification(
+            "🌅 शुभ प्रभात! आज का राशिफल तैयार है",
+            "आज का दिन कैसा रहेगा? अपनी राशि चेक करें "
+            "और दिन की शुभ शुरुआत करें 🙏"
+        )
+
+
+def send_aarti_notification():
+    """8:00 AM - Stotra + Aarti"""
+    day = datetime.now(IST).weekday()
+    aarti = AARTI_INFO[day]
+    send_onesignal_notification(
+        f"🪔 संध्या आरती — {aarti['name']}",
+        f"आज की {aarti['name']} करें और "
+        f"ईश्वर का आभार व्यक्त करें "
+        f"{aarti['emoji']} 🙏"
+    )
+
+
+def send_chalisa_notification():
+    """7:00 PM - Chalisa + Mantra"""
+    day = datetime.now(IST).weekday()
+    hindi_day = HINDI_DAYS[day]
+    chalisa = CHALISA_INFO[day]
+    send_onesignal_notification(
+        f"{chalisa['emoji']} आज की चालीसा — {chalisa['name']}",
+        f"आज {hindi_day} है। {chalisa['god']} की "
+        f"{chalisa['name']} पढ़ें और मंत्र जपें। "
+        f"मन को शांति और आशीर्वाद मिलेगा 🕉️"
+    )
+
+
+# ════════════════════════════════════════
+#  SCHEDULER
+# ════════════════════════════════════════
+
+def start_scheduler():
+    scheduler = BackgroundScheduler(timezone=IST)
+
+    # 6:00 AM - Good Morning + Rashifal
+    scheduler.add_job(
+        send_morning_notification,
+        'cron', hour=6, minute=0)
+
+    # 8:00 AM - Stotra + Aarti
+    scheduler.add_job(
+        send_aarti_notification,
+        'cron', hour=8, minute=0)
+
+    # 7:00 PM - Chalisa + Mantra
+    scheduler.add_job(
+        send_chalisa_notification,
+        'cron', hour=19, minute=0)
+
+    scheduler.start()
+    print("Scheduler started ✅")
+
+# ════════════════════════════════════════
 #  ROUTES
 # ════════════════════════════════════════
 
@@ -588,8 +712,30 @@ def get_categories():
     })
 
 # ════════════════════════════════════════
+#  NOTIFICATION TEST ROUTES
+# ════════════════════════════════════════
+
+@app.route('/notify/morning')
+def trigger_morning():
+    send_morning_notification()
+    return jsonify({"status": "Morning sent ✅"})
+
+@app.route('/notify/aarti')
+def trigger_aarti():
+    send_aarti_notification()
+    return jsonify({"status": "Aarti sent ✅"})
+
+@app.route('/notify/chalisa')
+def trigger_chalisa():
+    send_chalisa_notification()
+    return jsonify({"status": "Chalisa sent ✅"})
+
+# ════════════════════════════════════════
 #  RUN
 # ════════════════════════════════════════
+
+# Start scheduler
+start_scheduler()
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
