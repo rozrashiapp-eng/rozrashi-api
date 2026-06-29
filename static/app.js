@@ -66,42 +66,60 @@ async function loadHome() {
 // ===== LOAD TODAY LABELS FOR HOME CARDS =====
 async function loadHomeTodayLabels() {
     try {
-        // Aarti today label
+        // Aarti today label + direct link
         const aartiRes = await fetch(`${API_URL}/aarti/today`);
         const aartiJson = await aartiRes.json();
         const aartiLabel = document.getElementById('home-aarti-label');
         if (aartiLabel) {
             aartiLabel.textContent = aartiJson.data.god;
         }
+        const aartiCard = document.getElementById('home-aarti-card');
+        if (aartiCard) {
+            aartiCard.onclick = () => showAartiDetail(aartiJson.key);
+        }
     } catch (err) {
         const aartiLabel = document.getElementById('home-aarti-label');
         if (aartiLabel) aartiLabel.textContent = 'आज की आरती';
+        const aartiCard = document.getElementById('home-aarti-card');
+        if (aartiCard) aartiCard.onclick = () => showScreen('aarti');
     }
 
     try {
-        // Chalisa today label
+        // Chalisa today label + direct link
         const chalisaRes = await fetch(`${API_URL}/chalisa/today`);
         const chalisaJson = await chalisaRes.json();
         const chalisaLabel = document.getElementById('home-chalisa-label');
         if (chalisaLabel) {
             chalisaLabel.textContent = chalisaJson.data.god;
         }
+        const chalisaCard = document.getElementById('home-chalisa-card');
+        if (chalisaCard) {
+            chalisaCard.onclick = () => showChalisaDetail(chalisaJson.key);
+        }
     } catch (err) {
         const chalisaLabel = document.getElementById('home-chalisa-label');
         if (chalisaLabel) chalisaLabel.textContent = 'आज की चालीसा';
+        const chalisaCard = document.getElementById('home-chalisa-card');
+        if (chalisaCard) chalisaCard.onclick = () => showScreen('chalisa');
     }
 
     try {
-        // Mantra today label
+        // Mantra today label + direct link
         const mantraRes = await fetch(`${API_URL}/mantra/today`);
         const mantraJson = await mantraRes.json();
         const mantraLabel = document.getElementById('home-mantra-label');
         if (mantraLabel) {
             mantraLabel.textContent = mantraJson.data.god;
         }
+        const mantraCard = document.getElementById('home-mantra-card');
+        if (mantraCard) {
+            mantraCard.onclick = () => showMantraDetail(mantraJson.key);
+        }
     } catch (err) {
         const mantraLabel = document.getElementById('home-mantra-label');
         if (mantraLabel) mantraLabel.textContent = 'आज के मंत्र';
+        const mantraCard = document.getElementById('home-mantra-card');
+        if (mantraCard) mantraCard.onclick = () => showScreen('mantra');
     }
 }
 
