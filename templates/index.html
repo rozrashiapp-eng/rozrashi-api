@@ -23,10 +23,36 @@
         <h2>🙏 नमस्ते!</h2>
         <p>अपनी राशि चुनें और आज का राशिफल देखें</p>
     </div>
+
     <div class="section-title">⭐ अपनी राशि चुनें</div>
     <div class="rashi-grid" id="rashi-grid">
         <div class="loading">राशि लोड हो रही है...</div>
     </div>
+
+    <div class="section-title">🕉️ आज का</div>
+    <div class="rashi-grid" style="grid-template-columns: repeat(2, 1fr); gap:12px; margin-bottom:20px;">
+        <div class="rashi-mini-card" onclick="showScreen('aarti')" style="cursor:pointer;">
+            <span class="symbol">🪔</span>
+            <div class="name">आरती</div>
+            <div class="english" id="home-aarti-label">लोड हो रही है...</div>
+        </div>
+        <div class="rashi-mini-card" onclick="showScreen('chalisa')" style="cursor:pointer;">
+            <span class="symbol">📿</span>
+            <div class="name">चालीसा</div>
+            <div class="english" id="home-chalisa-label">लोड हो रही है...</div>
+        </div>
+        <div class="rashi-mini-card" onclick="showScreen('mantra')" style="cursor:pointer;">
+            <span class="symbol">🕉️</span>
+            <div class="name">मंत्र</div>
+            <div class="english" id="home-mantra-label">लोड हो रही है...</div>
+        </div>
+        <div class="rashi-mini-card" onclick="loadStatus('stotra', null); showScreen('status')" style="cursor:pointer;">
+            <span class="symbol">📖</span>
+            <div class="name">स्तोत्र</div>
+            <div class="english">आज का स्तोत्र</div>
+        </div>
+    </div>
+
     <div class="section-title">💬 आज का स्टेटस</div>
     <div id="home-status-preview">
         <div class="loading">स्टेटस लोड हो रही है...</div>
