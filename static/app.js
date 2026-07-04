@@ -2,7 +2,7 @@
 const API_URL = 'https://rozrashi-api.onrender.com';
 
 // ===== APP DOWNLOAD LINK (VIRAL SHARE WATERMARK) =====
-const APP_LINK = '\n\n📲 RozRashi App से पढ़ें\n👉 bit.ly/rozrashi';
+const APP_LINK = '\n\n📲 RozRashi App Download करें\n👉 https://play.google.com/store/apps/details?id=com.rozrashi.app';
 
 // ===== TRACK PREVIOUS SCREEN =====
 let previousScreen = 'home';
@@ -841,14 +841,20 @@ function shareImage() {
 
     if (window.Android) {
         setTimeout(() => {
-            Android.shareImage(base64);
+            Android.shareImageWithText(
+                base64,
+                '📲 RozRashi App Download करें 👇\nhttps://play.google.com/store/apps/details?id=com.rozrashi.app'
+            );
         }, 400);
     } else {
         small.toBlob(async (blob) => {
             const file = new File([blob], 'rozrashi-status.jpg',
                 { type: 'image/jpeg' });
             if (navigator.share && navigator.canShare({ files: [file] })) {
-                await navigator.share({ files: [file] });
+                await navigator.share({
+                    files: [file],
+                    text: '📲 RozRashi App Download करें 👇\nhttps://play.google.com/store/apps/details?id=com.rozrashi.app'
+                });
             } else {
                 downloadImage();
             }

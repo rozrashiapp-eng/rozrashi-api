@@ -4,6 +4,8 @@ from rashifal_data import get_rashifal_today, get_single_rashi_today
 from chalisa_data import CHALISA_DATA
 from mantra_data import MANTRA_DATA
 from aarti_data import AARTI_DATA
+from tithi_data import get_today_tithi
+from festivals_data import get_today_festival
 from datetime import datetime
 import pytz
 IST = pytz.timezone('Asia/Kolkata')
@@ -606,12 +608,33 @@ def send_onesignal_notification(title, message):
 
 
 def send_morning_notification():
-    """6:00 AM - Good Morning + Rashifal"""
-    send_onesignal_notification(
-            "🌅 शुभ प्रभात! आज का राशिफल तैयार है",
-            "आज का दिन कैसा रहेगा? अपनी राशि चेक करें "
-            "और दिन की शुभ शुरुआत करें 🙏"
+    """6:00 AM - Smart notification based on today"""
+    from tithi_data import get_today_tithi
+
+    # Check tithi first (highest priority)
+    tithi = get_today_tithi()
+    if tithi:
+        send_onesignal_notification(
+            tithi["notification_title"],
+            tithi["notification_msg"]
         )
+        return
+
+    # Check festival
+    festival = get_today_festival()
+    if festival:
+        send_onesignal_notification(
+            festival["notification_title"],
+            festival["notification_msg"]
+        )
+        return
+
+    # Normal day - Rashifal notification
+    send_onesignal_notification(
+        "🌅 शुभ प्रभात! आज का राशिफल तैयार है",
+        "आज का दिन कैसा रहेगा? अपनी राशि चेक करें "
+        "और दिन की शुभ शुरुआत करें 🙏"
+    )
 
 
 def send_aarti_notification():
@@ -703,6 +726,23 @@ def get_status_by_category(category):
     if data:
         return jsonify({"success": True, "category": category, "data": data})
     return jsonify({"success": False, "message": "Category not found"}), 404
+
+@app.route('/today/special')
+def get_today_special():
+    """Returns today's special event if any"""
+    from tithi_data import get_today_tithi
+    tithi = get_today_tithi()
+    if tithi:
+        return jsonify({"success": True,
+                       "type": "tithi",
+                       "data": tithi})
+    festival = get_today_festival()
+    if festival:
+        return jsonify({"success": True,
+                       "type": "festival",
+                       "data": festival})
+    return jsonify({"success": False,
+                   "message": "No special event today"})
 
 @app.route('/status/categories/all')
 def get_categories():
