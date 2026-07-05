@@ -1216,7 +1216,7 @@ function shareImage() {
     small.height = 540;
     small.getContext('2d').drawImage(canvas, 0, 0, 540, 540);
 
-    // ✅ For Android WebView
+    // ✅ Android WebView
     if (window.Android) {
         const base64 = small.toDataURL('image/jpeg', 0.85).split(',')[1];
         closeGenerator();
@@ -1229,29 +1229,38 @@ function shareImage() {
         return;
     }
 
-    // ✅ For web browsers — use text share only (avoids gesture issue)
-    // Image sharing via navigator.share with files breaks user gesture chain
+    // ✅ Web browser — share text IMMEDIATELY in same user gesture
+    // DO NOT close generator before share, DO NOT use setTimeout
     const shareText = currentStatusText + APP_LINK;
 
     if (navigator.share) {
-        // Close generator first then share text
-        closeGenerator();
-        setTimeout(() => {
-            navigator.share({ text: shareText })
-                .catch(err => {
-                    if (err.name !== 'AbortError') {
-                        navigator.clipboard.writeText(shareText)
-                            .then(() => showToast('✅ कॉपी हो गया! WhatsApp पर पेस्ट करें'));
-                    }
-                });
-        }, 300);
+        navigator.share({ text: shareText })
+            .then(() => {
+                closeGenerator(); // close AFTER share succeeds
+            })
+            .catch(err => {
+                if (err.name !== 'AbortError') {
+                    // Share failed — fallback to clipboard
+                    navigator.clipboard.writeText(shareText)
+                        .then(() => {
+                            closeGenerator();
+                            showToast('✅ कॉपी हो गया! WhatsApp पर पेस्ट करें');
+                        });
+                } else {
+                    // User cancelled share — just close
+                    closeGenerator();
+                }
+            });
     } else {
-        // Fallback — copy to clipboard
-        closeGenerator();
+        // No share API — copy to clipboard
         navigator.clipboard.writeText(shareText)
-            .then(() => showToast('✅ कॉपी हो गया! WhatsApp पर पेस्ट करें'))
+            .then(() => {
+                closeGenerator();
+                showToast('✅ कॉपी हो गया! WhatsApp पर पेस्ट करें');
+            })
             .catch(() => {
                 // Last fallback — download image
+                closeGenerator();
                 const link = document.createElement('a');
                 link.download = 'rozrashi-status.jpg';
                 link.href = small.toDataURL('image/jpeg', 0.85);
