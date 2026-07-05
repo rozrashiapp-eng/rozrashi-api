@@ -169,14 +169,6 @@ def get_mantra(day):
         "message": "Mantra not found"
     }), 404
 
-# ═══════════════════════════════════════
-# ADD THESE IMPORTS AT TOP OF app.py
-# (after existing imports)
-# ═══════════════════════════════════════
-
-# import requests   ← already exists
-# These are already imported, no new imports needed
-
 
 # ═══════════════════════════════════════
 # PANCHANG ROUTES
@@ -184,207 +176,246 @@ def get_mantra(day):
 # ═══════════════════════════════════════
 
 # Default location — Ujjain (traditional Panchang city)
-DEFAULT_LAT  = 23.1765
-DEFAULT_LNG  = 75.7885
-DEFAULT_TZ   = 5.5
-
-# Hindi translations for Panchang fields
+# Default location — Ujjain (traditional Panchang city)
+DEFAULT_LAT = 23.1765
+DEFAULT_LNG = 75.7885
+DEFAULT_TZ  = 5.5
+ 
+BASE_URL = "https://json.freeastrologyapi.com"
+ 
+# ---- Hindi translation tables (unchanged from before) ----
 TITHI_NAMES = {
-    "Pratipada": "प्रतिपदा", "Dwitiya": "द्वितीया",
-    "Tritiya": "तृतीया", "Chaturthi": "चतुर्थी",
-    "Panchami": "पंचमी", "Shashthi": "षष्ठी",
-    "Saptami": "सप्तमी", "Ashtami": "अष्टमी",
-    "Navami": "नवमी", "Dashami": "दशमी",
-    "Ekadashi": "एकादशी", "Dwadashi": "द्वादशी",
+    "Pratipada": "प्रतिपदा", "Dwitiya": "द्वितीया", "Tritiya": "तृतीया",
+    "Chaturthi": "चतुर्थी", "Panchami": "पंचमी", "Shashthi": "षष्ठी",
+    "Saptami": "सप्तमी", "Ashtami": "अष्टमी", "Navami": "नवमी",
+    "Dashami": "दशमी", "Ekadashi": "एकादशी", "Dwadashi": "द्वादशी",
     "Trayodashi": "त्रयोदशी", "Chaturdashi": "चतुर्दशी",
-    "Purnima": "पूर्णिमा", "Amavasya": "अमावस्या",
-    "Shashti": "षष्ठी", "Shukla": "शुक्ल",
-    "Krishna": "कृष्ण"
+    "Purnima": "पूर्णिमा", "Amavasya": "अमावस्या", "Shashti": "षष्ठी",
+    "Shukla": "शुक्ल", "Krishna": "कृष्ण"
 }
-
 NAKSHATRA_NAMES = {
-    "Ashwini": "अश्विनी", "Bharani": "भरणी",
-    "Krittika": "कृत्तिका", "Rohini": "रोहिणी",
-    "Mrigashira": "मृगशिरा", "Ardra": "आर्द्रा",
-    "Punarvasu": "पुनर्वसु", "Pushya": "पुष्य",
-    "Ashlesha": "आश्लेषा", "Magha": "मघा",
-    "Purva Phalguni": "पूर्व फाल्गुनी",
-    "Uttara Phalguni": "उत्तर फाल्गुनी",
-    "Hasta": "हस्त", "Chitra": "चित्रा",
-    "Swati": "स्वाती", "Vishakha": "विशाखा",
-    "Anuradha": "अनुराधा", "Jyeshtha": "ज्येष्ठा",
-    "Mula": "मूल", "Purva Ashadha": "पूर्वाषाढ़ा",
-    "Uttara Ashadha": "उत्तराषाढ़ा",
-    "Shravana": "श्रवण", "Dhanishtha": "धनिष्ठा",
-    "Shatabhisha": "शतभिषा",
-    "Purva Bhadrapada": "पूर्व भाद्रपद",
-    "Uttara Bhadrapada": "उत्तर भाद्रपद",
+    "Ashwini": "अश्विनी", "Bharani": "भरणी", "Krittika": "कृत्तिका",
+    "Rohini": "रोहिणी", "Mrigashira": "मृगशिरा", "Ardra": "आर्द्रा",
+    "Punarvasu": "पुनर्वसु", "Pushya": "पुष्य", "Ashlesha": "आश्लेषा",
+    "Magha": "मघा", "Purva Phalguni": "पूर्व फाल्गुनी",
+    "Uttara Phalguni": "उत्तर फाल्गुनी", "Hasta": "हस्त", "Chitra": "चित्रा",
+    "Swati": "स्वाती", "Vishakha": "विशाखा", "Anuradha": "अनुराधा",
+    "Jyeshtha": "ज्येष्ठा", "Mula": "मूल", "Purva Ashadha": "पूर्वाषाढ़ा",
+    "Uttara Ashadha": "उत्तराषाढ़ा", "Shravana": "श्रवण",
+    "Dhanishtha": "धनिष्ठा", "Shatabhisha": "शतभिषा",
+    "Purva Bhadrapada": "पूर्व भाद्रपद", "Uttara Bhadrapada": "उत्तर भाद्रपद",
     "Revati": "रेवती"
 }
-
 YOGA_NAMES = {
-    "Vishkambha": "विष्कम्भ", "Priti": "प्रीति",
-    "Ayushman": "आयुष्मान", "Saubhagya": "सौभाग्य",
-    "Shobhana": "शोभन", "Atiganda": "अतिगण्ड",
-    "Sukarma": "सुकर्मा", "Dhriti": "धृति",
-    "Shula": "शूल", "Ganda": "गण्ड",
-    "Vriddhi": "वृद्धि", "Dhruva": "ध्रुव",
-    "Vyaghata": "व्याघात", "Harshana": "हर्षण",
-    "Vajra": "वज्र", "Siddhi": "सिद्धि",
-    "Vyatipata": "व्यतीपात", "Variyan": "वरीयान",
-    "Parigha": "परिघ", "Shiva": "शिव",
-    "Siddha": "सिद्ध", "Sadhya": "साध्य",
-    "Shubha": "शुभ", "Shukla": "शुक्ल",
-    "Brahma": "ब्रह्म", "Indra": "इन्द्र",
-    "Vaidhriti": "वैधृति"
+    "Vishkambha": "विष्कम्भ", "Priti": "प्रीति", "Ayushman": "आयुष्मान",
+    "Saubhagya": "सौभाग्य", "Shobhana": "शोभन", "Atiganda": "अतिगण्ड",
+    "Sukarma": "सुकर्मा", "Dhriti": "धृति", "Shula": "शूल",
+    "Ganda": "गण्ड", "Vriddhi": "वृद्धि", "Dhruva": "ध्रुव",
+    "Vyaghata": "व्याघात", "Harshana": "हर्षण", "Vajra": "वज्र",
+    "Siddhi": "सिद्धि", "Vyatipata": "व्यतीपात", "Variyan": "वरीयान",
+    "Parigha": "परिघ", "Shiva": "शिव", "Siddha": "सिद्ध",
+    "Sadhya": "साध्य", "Shubha": "शुभ", "Brahma": "ब्रह्म",
+    "Indra": "इन्द्र", "Vaidhriti": "वैधृति"
 }
-
 KARAN_NAMES = {
-    "Bava": "बव", "Balava": "बालव",
-    "Kaulava": "कौलव", "Taitila": "तैतिल",
-    "Garaja": "गरज", "Vanija": "वणिज",
-    "Vishti": "विष्टि", "Bhadra": "भद्रा",
-    "Shakuni": "शकुनि", "Chatushpada": "चतुष्पाद",
-    "Naga": "नाग", "Kimstughna": "किंस्तुघ्न",
-    "Vanij": "वणिज"
+    "Bava": "बव", "Balava": "बालव", "Kaulava": "कौलव", "Taitila": "तैतिल",
+    "Garaja": "गरज", "Vanija": "वणिज", "Vanij": "वणिज", "Vishti": "विष्टि",
+    "Bhadra": "भद्रा", "Shakuni": "शकुनि", "Chatushpada": "चतुष्पाद",
+    "Naga": "नाग", "Kimstughna": "किंस्तुघ्न"
 }
-
-PAKSHA_NAMES = {
-    "Shukla": "शुक्ल पक्ष",
-    "Krishna": "कृष्ण पक्ष"
-}
-
-def translate_panchang(data):
-    """Translate English panchang fields to Hindi"""
+PAKSHA_NAMES = {"Shukla": "शुक्ल पक्ष", "Krishna": "कृष्ण पक्ष"}
+ 
+# ---- Simple in-memory daily cache (Ujjain default only) ----
+_panchang_cache = {"date_key": None, "payload": None}
+ 
+ 
+def _get_headers():
+    api_key = os.environ.get('FREE_ASTRO_API_KEY')
+    return {"Content-Type": "application/json", "x-api-key": api_key}, api_key
+ 
+ 
+def _base_payload(now, lat, lng, tz):
+    return {
+        "year": now.year, "month": now.month, "date": now.day,
+        "hours": now.hour, "minutes": now.minute, "seconds": 0,
+        "latitude": lat, "longitude": lng, "timezone": tz,
+        "config": {"observation_point": "topocentric", "ayanamsha": "lahiri"}
+    }
+ 
+ 
+def _call_endpoint(path, payload, headers, timeout=10):
+    """Call one individual endpoint. Returns (ok, json_or_none, raw_text)."""
     try:
-        result = {}
-
-        # Sunrise / Sunset
-        result["sunrise"]     = data.get("sunrise", "--")
-        result["sunset"]      = data.get("sunset", "--")
-
-        # Tithi
-        tithi = data.get("tithi", {})
-        tithi_name = tithi.get("name", "")
-        paksha     = tithi.get("paksha", "")
-        tithi_hi   = TITHI_NAMES.get(tithi_name, tithi_name)
-        paksha_hi  = PAKSHA_NAMES.get(paksha, paksha)
-        result["tithi"] = f"{paksha_hi} {tithi_hi}"
-        result["tithi_ends"] = tithi.get("ends_at", "")
-
-        # Nakshatra
-        nakshatra      = data.get("nakshatra", {})
-        nak_name       = nakshatra.get("name", "")
-        result["nakshatra"]      = NAKSHATRA_NAMES.get(nak_name, nak_name)
-        result["nakshatra_lord"] = nakshatra.get("lord", "")
-        result["nakshatra_ends"] = nakshatra.get("ends_at", "")
-
-        # Yoga
-        yoga      = data.get("yoga", {})
-        yoga_name = yoga.get("name", "")
-        result["yoga"]      = YOGA_NAMES.get(yoga_name, yoga_name)
-        result["yoga_ends"] = yoga.get("ends_at", "")
-
-        # Karan
-        karanas = data.get("karanas", [])
-        if karanas:
-            karan_name = karanas[0].get("name", "")
-            result["karan"] = KARAN_NAMES.get(karan_name, karan_name)
-        else:
-            result["karan"] = "--"
-
-        # Rahu Kaal
-        rahu = data.get("rahu_kalam", {})
-        result["rahu_kaal"] = (
-            f"{rahu.get('start', '--')} - {rahu.get('end', '--')}"
-        )
-
-        # Lunar month
-        lunar = data.get("lunar_month", {})
-        result["lunar_month"]   = lunar.get("name", "--")
-        result["vikram_samvat"] = str(lunar.get("vikram_samvat", "--"))
-
-        # Weekday
-        weekday = data.get("weekday", {})
-        result["weekday"] = weekday.get("name", "--")
-
-        return result
+        resp = requests.post(f"{BASE_URL}/{path}", json=payload,
+                              headers=headers, timeout=timeout)
+        if resp.status_code == 200:
+            data = resp.json()
+            # Detect the same silent-deprecation pattern we hit before
+            if isinstance(data, dict) and "output" in data and \
+               isinstance(data["output"], str) and "deprecat" in data["output"].lower():
+                return False, None, resp.text
+            return True, data, resp.text
+        return False, None, resp.text
     except Exception as e:
-        print(f"Panchang translate error: {e}")
-        return {}
-
-
+        return False, None, str(e)
+ 
+ 
+def _dig(d, *keys, default=None):
+    """Try several possible key names / nested paths, return first hit."""
+    for k in keys:
+        if isinstance(k, tuple):
+            cur = d
+            ok = True
+            for part in k:
+                if isinstance(cur, dict) and part in cur:
+                    cur = cur[part]
+                else:
+                    ok = False
+                    break
+            if ok and cur not in (None, ""):
+                return cur
+        else:
+            if isinstance(d, dict) and k in d and d[k] not in (None, ""):
+                return d[k]
+    return default
+ 
+ 
+def fetch_full_panchang(lat, lng, tz, now, debug_raw):
+    """Calls all 9 endpoints and assembles the translated result."""
+    headers, api_key = _get_headers()
+    if not api_key:
+        return None, {"success": False, "message": "API key not configured"}
+ 
+    payload = _base_payload(now, lat, lng, tz)
+    result = {}
+ 
+    endpoints = {
+        "sun":       "getsunriseandset",
+        "tithi":     "tithi-durations",
+        "nakshatra": "nakshatra-durations",
+        "yoga":      "yoga-durations",
+        "karana":    "karana-durations",
+        "weekday":   "vedic-weekday",
+        "lunar":     "lunar-month-info",
+        "samvat":    "samvat-info",
+        "rahu":      "rahu-kalam",
+    }
+ 
+    raw_dump = {}
+    for key, path in endpoints.items():
+        ok, data, raw_text = _call_endpoint(path, payload, headers)
+        raw_dump[key] = raw_text
+        if not ok:
+            result[key] = None
+            continue
+        # Some endpoints wrap in {"statusCode":200,"output":{...}} — unwrap if present
+        if isinstance(data, dict) and "output" in data and isinstance(data["output"], dict):
+            data = data["output"]
+        result[key] = data
+ 
+    translated = {}
+ 
+    # Sunrise / Sunset — try a few likely key names
+    sun = result.get("sun") or {}
+    translated["sunrise"] = _dig(sun, "sun_rise_time", "sun_rise", "sunrise", default="--")
+    translated["sunset"]  = _dig(sun, "sun_set_time", "sun_set", "sunset", default="--")
+ 
+    # Tithi
+    tithi = result.get("tithi") or {}
+    tithi_name = _dig(tithi, "name", "tithi_name", default="")
+    paksha     = _dig(tithi, "paksha", default="")
+    tithi_hi   = TITHI_NAMES.get(tithi_name, tithi_name) or "--"
+    paksha_hi  = PAKSHA_NAMES.get(paksha.capitalize() if paksha else "", paksha)
+    translated["tithi"] = f"{paksha_hi} {tithi_hi}".strip() or "--"
+    translated["tithi_ends"] = _dig(tithi, "ends_at", "completes_at", "end_time", default="")
+ 
+    # Nakshatra
+    nak = result.get("nakshatra") or {}
+    nak_name = _dig(nak, "name", "nakshatra_name", default="")
+    translated["nakshatra"] = NAKSHATRA_NAMES.get(nak_name, nak_name) or "--"
+    translated["nakshatra_lord"] = _dig(nak, "lord", "nakshatra_lord", default="")
+    translated["nakshatra_ends"] = _dig(nak, "ends_at", "completes_at", default="")
+ 
+    # Yoga
+    yoga = result.get("yoga") or {}
+    yoga_name = _dig(yoga, "name", "yoga_name", default="")
+    translated["yoga"] = YOGA_NAMES.get(yoga_name, yoga_name) or "--"
+    translated["yoga_ends"] = _dig(yoga, "ends_at", "completes_at", default="")
+ 
+    # Karan
+    karan = result.get("karana") or {}
+    karan_name = _dig(karan, "name", "karan_name", default="")
+    if isinstance(karan, list) and karan:
+        karan_name = _dig(karan[0], "name", default="")
+    translated["karan"] = KARAN_NAMES.get(karan_name, karan_name) or "--"
+ 
+    # Rahu Kaal
+    rahu = result.get("rahu") or {}
+    r_start = _dig(rahu, "start", "start_time", default="--")
+    r_end   = _dig(rahu, "end", "end_time", default="--")
+    translated["rahu_kaal"] = f"{r_start} - {r_end}"
+ 
+    # Lunar month + Vikram Samvat
+    lunar = result.get("lunar") or {}
+    translated["lunar_month"] = _dig(lunar, "name", "lunar_month_name", "lunar_month_full_name", default="--")
+    samvat = result.get("samvat") or {}
+    translated["vikram_samvat"] = str(_dig(samvat, "vikram_samvat", "vikram_samvat_year", default="--"))
+ 
+    # Weekday
+    weekday = result.get("weekday") or {}
+    translated["weekday"] = _dig(weekday, "name", "weekday_name", "vedic_weekday_name", default="--")
+ 
+    if debug_raw:
+        translated["_raw_debug"] = raw_dump
+ 
+    return translated, None
+ 
+ 
 @app.route('/panchang')
 def get_panchang():
-    """Get today's panchang — uses query params lat/lng or defaults to Ujjain"""
+    """Get today's panchang — uses query params lat/lng or defaults to Ujjain (cached daily)."""
     try:
         lat = float(request.args.get('lat', DEFAULT_LAT))
         lng = float(request.args.get('lng', DEFAULT_LNG))
-        tz  = float(request.args.get('tz',  DEFAULT_TZ))
-
+        tz  = float(request.args.get('tz', DEFAULT_TZ))
+        debug = request.args.get('debug', '') == '1'
+ 
         now = datetime.now(IST)
-
-        api_key = os.environ.get('FREE_ASTRO_API_KEY')
-        if not api_key:
+        is_default = (lat == DEFAULT_LAT and lng == DEFAULT_LNG)
+        today_key = now.strftime("%Y-%m-%d")
+ 
+        # Serve from cache if this is the default Ujjain request and cache is fresh
+        if is_default and not debug and _panchang_cache["date_key"] == today_key:
+            return jsonify(_panchang_cache["payload"])
+ 
+        translated, err = fetch_full_panchang(lat, lng, tz, now, debug_raw=debug)
+        if err:
+            return jsonify(err), 500
+ 
+        # Basic sanity check — if core fields are still "--", treat as a failure
+        if translated.get("sunrise", "--") == "--" and translated.get("tithi", "--") in ("--", " --"):
             return jsonify({
                 "success": False,
-                "message": "API key not configured"
-            }), 500
-
-        payload = {
-            "year":      now.year,
-            "month":     now.month,
-            "date":      now.day,
-            "hours":     now.hour,
-            "minutes":   now.minute,
-            "seconds":   0,
-            "latitude":  lat,
-            "longitude": lng,
-            "timezone":  tz,
-            "config": {
-                "observation_point": "topocentric",
-                "ayanamsha": "lahiri"
-            }
+                "message": "Panchang data unavailable from provider",
+                "debug": translated.get("_raw_debug") if debug else None
+            }), 502
+ 
+        response_payload = {
+            "success": True,
+            "date": now.strftime("%d %B %Y"),
+            "location": {"lat": lat, "lng": lng, "is_default": is_default},
+            "data": translated
         }
-
-        headers = {
-            "Content-Type": "application/json",
-            "x-api-key": api_key
-        }
-
-        response = requests.post(
-            "https://json.freeastrologyapi.com/complete-panchang",
-            json=payload,
-            headers=headers,
-            timeout=10
-        )
-
-        if response.status_code == 200:
-            raw_data = response.json()
-            translated = translate_panchang(raw_data)
-            return jsonify({
-                "success": True,
-                "date": now.strftime("%d %B %Y"),
-                "location": {
-                    "lat": lat,
-                    "lng": lng,
-                    "is_default": lat == DEFAULT_LAT and lng == DEFAULT_LNG
-                },
-                "data": translated,
-                "raw": raw_data
-            })
-        else:
-            return jsonify({
-                "success": False,
-                "message": f"API error: {response.status_code}",
-                "detail": response.text
-            }), 500
-
+ 
+        # Update cache only for the default Ujjain result
+        if is_default:
+            _panchang_cache["date_key"] = today_key
+            _panchang_cache["payload"] = response_payload
+ 
+        return jsonify(response_payload)
+ 
     except Exception as e:
-        return jsonify({
-            "success": False,
-            "message": str(e)
-        }), 500
+        return jsonify({"success": False, "message": str(e)}), 500
 
 
 # ═══════════════════════════════════════
