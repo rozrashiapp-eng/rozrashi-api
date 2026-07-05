@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 from rashifal_data import get_rashifal_today, get_single_rashi_today
 from chalisa_data import CHALISA_DATA
