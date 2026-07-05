@@ -826,7 +826,8 @@ async function searchCity(query) {
                 json.data.forEach(city => {
                     const item = document.createElement('div');
                     item.style = `padding:10px 12px;cursor:pointer;border-bottom:
-                                  1px solid rgba(255,107,0,0.1);font-size:13px;color:#fff;`;
+                                  1px solid #FFD49A;font-size:13px;color:#2D1B00;
+                                  background:#FFF0E0;`;
                     item.textContent = city.name + (city.full.includes(',') ?
                         ' — ' + city.full.split(',').slice(1, 3).join(',').trim() : '');
                     item.onmousedown = () => {
