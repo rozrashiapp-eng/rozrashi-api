@@ -560,10 +560,9 @@ async function loadTodayMantra(btnElement) {
 
 async function showMantraDetail(key) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     // reuse mantra screen itself for detail
     document.getElementById('screen-mantra').classList.add('active');
-    document.getElementById('nav-mantra').classList.add('active');
 
     const container = document.getElementById('mantra-list');
     container.innerHTML = '<div class="loading">मंत्र लोड हो रही है...</div>';
@@ -1218,9 +1217,8 @@ function shareImage() {
     small.getContext('2d').drawImage(canvas, 0, 0, 540, 540);
     const base64 = small.toDataURL('image/jpeg', 0.85).split(',')[1];
 
-    closeGenerator();
-
     if (window.Android) {
+        closeGenerator();          // safe to close first for Android
         setTimeout(() => {
             Android.shareImageWithText(
                 base64,
@@ -1228,16 +1226,34 @@ function shareImage() {
             );
         }, 400);
     } else {
+        // ✅ Share FIRST, close AFTER — keeps user gesture alive
         small.toBlob(async (blob) => {
             const file = new File([blob], 'rozrashi-status.jpg',
                 { type: 'image/jpeg' });
-            if (navigator.share && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    files: [file],
-                    text: '📲 RozRashi App Download करें 👇\nhttps://play.google.com/store/apps/details?id=com.rozrashi.app'
-                });
-            } else {
-                downloadImage();
+            try {
+                if (navigator.share && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        text: '📲 RozRashi App Download करें 👇\nhttps://play.google.com/store/apps/details?id=com.rozrashi.app'
+                    });
+                } else {
+                    // Fallback: download the image
+                    const link = document.createElement('a');
+                    link.download = 'rozrashi-status.jpg';
+                    link.href = URL.createObjectURL(blob);
+                    link.click();
+                    showToast('✅ Image Download हो रही है!');
+                }
+            } catch (err) {
+                // User cancelled share or error — just download
+                if (err.name !== 'AbortError') {
+                    const link = document.createElement('a');
+                    link.download = 'rozrashi-status.jpg';
+                    link.href = URL.createObjectURL(blob);
+                    link.click();
+                }
+            } finally {
+                closeGenerator();  // ✅ Close only after share completes
             }
         }, 'image/jpeg', 0.85);
     }
