@@ -30,30 +30,30 @@
     </div>
 
     <div class="section-title">🕉️ आज का</div>
-<div class="rashi-grid" style="grid-template-columns: repeat(2, 1fr); gap:12px; margin-bottom:20px;">
-    <div class="rashi-mini-card" id="home-aarti-card" style="cursor:pointer;">
-        <span class="symbol">🪔</span>
-        <div class="name">आरती</div>
-        <div class="english" id="home-aarti-label">लोड हो रही है...</div>
+    <div class="rashi-grid" style="grid-template-columns: repeat(2, 1fr); gap:12px; margin-bottom:20px;">
+        <div class="rashi-mini-card" id="home-aarti-card" style="cursor:pointer;">
+            <span class="symbol">🪔</span>
+            <div class="name">आरती</div>
+            <div class="english" id="home-aarti-label">लोड हो रही है...</div>
+        </div>
+        <div class="rashi-mini-card" id="home-chalisa-card" style="cursor:pointer;">
+            <span class="symbol">📿</span>
+            <div class="name">चालीसा</div>
+            <div class="english" id="home-chalisa-label">लोड हो रही है...</div>
+        </div>
+        <div class="rashi-mini-card" id="home-mantra-card" style="cursor:pointer;">
+            <span class="symbol">🕉️</span>
+            <div class="name">मंत्र</div>
+            <div class="english" id="home-mantra-label">लोड हो रही है...</div>
+        </div>
+        <div class="rashi-mini-card"
+            onclick="loadStatus('stotra', null); showScreen('status')"
+            style="cursor:pointer;">
+            <span class="symbol">📖</span>
+            <div class="name">स्तोत्र</div>
+            <div class="english">आज का स्तोत्र</div>
+        </div>
     </div>
-    <div class="rashi-mini-card" id="home-chalisa-card" style="cursor:pointer;">
-        <span class="symbol">📿</span>
-        <div class="name">चालीसा</div>
-        <div class="english" id="home-chalisa-label">लोड हो रही है...</div>
-    </div>
-    <div class="rashi-mini-card" id="home-mantra-card" style="cursor:pointer;">
-        <span class="symbol">🕉️</span>
-        <div class="name">मंत्र</div>
-        <div class="english" id="home-mantra-label">लोड हो रही है...</div>
-    </div>
-    <div class="rashi-mini-card"
-        onclick="loadStatus('stotra', null); showScreen('status')"
-        style="cursor:pointer;">
-        <span class="symbol">📖</span>
-        <div class="name">स्तोत्र</div>
-        <div class="english">आज का स्तोत्र</div>
-    </div>
-</div>
 
     <div class="section-title">💬 आज का स्टेटस</div>
     <div id="home-status-preview">
@@ -77,39 +77,150 @@
     </div>
 </div>
 
+<!-- ===== PANCHANG SCREEN ===== -->
+<div class="screen" id="screen-panchang">
+    <div class="section-title">🗓️ आज का पंचांग</div>
+
+    <!-- Location info bar -->
+    <div id="panchang-location-bar"
+         style="background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.3);
+                border-radius:10px;padding:10px 14px;margin-bottom:14px;
+                font-size:12px;color:#FF6B00;display:flex;
+                justify-content:space-between;align-items:center;">
+        <span id="panchang-location-text">📍 उज्जैन (डिफ़ॉल्ट)</span>
+        <button onclick="getPanchangLocation()"
+                style="background:rgba(255,107,0,0.2);border:1px solid #FF6B00;
+                       border-radius:6px;padding:4px 10px;color:#FF6B00;
+                       font-size:11px;cursor:pointer;">
+            📍 मेरा स्थान
+        </button>
+    </div>
+
+    <!-- Panchang content -->
+    <div id="panchang-content">
+        <div class="loading">पंचांग लोड हो रही है...</div>
+    </div>
+</div>
+
+<!-- ===== KUNDALI SCREEN ===== -->
+<div class="screen" id="screen-kundali">
+    <div class="section-title">👤 जन्म कुंडली</div>
+
+    <!-- Input Form -->
+    <div id="kundali-form"
+         style="background:rgba(255,255,255,0.05);border-radius:14px;
+                padding:16px;margin-bottom:16px;">
+
+        <div style="margin-bottom:12px;">
+            <label style="font-size:12px;color:#FF6B00;display:block;
+                          margin-bottom:4px;">
+                👤 नाम (वैकल्पिक)
+            </label>
+            <input type="text" id="k-name" placeholder="जातक का नाम"
+                   style="width:100%;padding:10px;border-radius:8px;
+                          border:1px solid rgba(255,107,0,0.3);
+                          background:rgba(255,255,255,0.08);
+                          color:#fff;font-size:14px;box-sizing:border-box;
+                          font-family:'Hind',sans-serif;">
+        </div>
+
+        <div style="margin-bottom:12px;">
+            <label style="font-size:12px;color:#FF6B00;display:block;
+                          margin-bottom:4px;">
+                📅 जन्म तिथि *
+            </label>
+            <input type="date" id="k-dob"
+                   style="width:100%;padding:10px;border-radius:8px;
+                          border:1px solid rgba(255,107,0,0.3);
+                          background:rgba(255,255,255,0.08);
+                          color:#fff;font-size:14px;box-sizing:border-box;">
+        </div>
+
+        <div style="margin-bottom:12px;">
+            <label style="font-size:12px;color:#FF6B00;display:block;
+                          margin-bottom:4px;">
+                ⏰ जन्म समय *
+            </label>
+            <input type="time" id="k-tob"
+                   style="width:100%;padding:10px;border-radius:8px;
+                          border:1px solid rgba(255,107,0,0.3);
+                          background:rgba(255,255,255,0.08);
+                          color:#fff;font-size:14px;box-sizing:border-box;">
+        </div>
+
+        <div style="margin-bottom:16px; position:relative;">
+            <label style="font-size:12px;color:#FF6B00;display:block;
+                          margin-bottom:4px;">
+                📍 जन्म स्थान *
+            </label>
+            <input type="text" id="k-city"
+                   placeholder="शहर का नाम टाइप करें..."
+                   oninput="searchCity(this.value)"
+                   autocomplete="off"
+                   style="width:100%;padding:10px;border-radius:8px;
+                          border:1px solid rgba(255,107,0,0.3);
+                          background:rgba(255,255,255,0.08);
+                          color:#fff;font-size:14px;box-sizing:border-box;
+                          font-family:'Hind',sans-serif;">
+
+            <!-- City suggestions dropdown -->
+            <div id="city-suggestions"
+                 style="display:none;position:absolute;top:100%;left:0;right:0;
+                        background:#1a0a2e;border:1px solid rgba(255,107,0,0.3);
+                        border-radius:8px;z-index:100;max-height:160px;
+                        overflow-y:auto;">
+            </div>
+
+            <!-- Hidden lat/lng -->
+            <input type="hidden" id="k-lat">
+            <input type="hidden" id="k-lng">
+        </div>
+
+        <button onclick="generateKundali()"
+                style="width:100%;padding:14px;background:linear-gradient(135deg,#FF6B00,#ff9500);
+                       border:none;border-radius:12px;color:#fff;font-size:16px;
+                       font-weight:bold;cursor:pointer;font-family:'Hind',sans-serif;">
+            🔮 कुंडली बनाएं
+        </button>
+    </div>
+
+    <!-- Kundali Result -->
+    <div id="kundali-result" style="display:none;">
+    </div>
+</div>
+
 <!-- ===== STATUS SCREEN ===== -->
 <div class="screen" id="screen-status">
     <div class="category-tabs" id="category-tabs">
-    <button class="tab-btn active"
-        onclick="loadStatus('good_morning', this)">
-        🌅 सुप्रभात
-    </button>
-    <button class="tab-btn"
-        onclick="loadStatus('bhakti_quotes', this)">
-        🙏 भक्ति
-    </button>
-    <button class="tab-btn"
-        onclick="loadStatus('mantra_status', this)">
-        🕉️ मंत्र
-    </button>
-    <button class="tab-btn"
-        onclick="loadStatus('festival', this)">
-        🪔 त्योहार
-    </button>
-    <button class="tab-btn"
-        onclick="loadStatus('stotra', this)">
-        📿 स्तोत्र
-    </button>
-</div>
-<div id="status-list">
-    <div class="loading">स्टेटस लोड हो रही है...</div>
+        <button class="tab-btn active"
+            onclick="loadStatus('good_morning', this)">
+            🌅 सुप्रभात
+        </button>
+        <button class="tab-btn"
+            onclick="loadStatus('bhakti_quotes', this)">
+            🙏 भक्ति
+        </button>
+        <button class="tab-btn"
+            onclick="loadStatus('mantra_status', this)">
+            🕉️ मंत्र
+        </button>
+        <button class="tab-btn"
+            onclick="loadStatus('festival', this)">
+            🪔 त्योहार
+        </button>
+        <button class="tab-btn"
+            onclick="loadStatus('stotra', this)">
+            📿 स्तोत्र
+        </button>
+    </div>
+    <div id="status-list">
+        <div class="loading">स्टेटस लोड हो रही है...</div>
+    </div>
 </div>
 
-</div> <!-- closes screen-status -->
 <!-- ===== IMAGE CARD GENERATOR OVERLAY ===== -->
 <div class="generator-overlay" id="generatorOverlay">
     <div class="generator-box">
-
         <div class="generator-header">
             <span class="generator-title">🎨 Image Status बनाएं</span>
             <button class="generator-close" onclick="closeGenerator()">✕</button>
@@ -154,17 +265,19 @@
                 📤 WhatsApp
             </button>
         </div>
-
     </div>
 </div>
-<!-- ===== BOTTOM NAVIGATION ===== -->
 
 <!-- ===== CHALISA SCREEN ===== -->
 <div class="screen" id="screen-chalisa">
     <div class="section-title">📿 चालीसा</div>
     <div class="category-tabs">
-        <button class="tab-btn active" onclick="loadChalisaList(this)">📋 सभी चालीसा</button>
-        <button class="tab-btn" onclick="loadTodayChalisa(this)">⭐ आज की चालीसा</button>
+        <button class="tab-btn active" onclick="loadChalisaList(this)">
+            📋 सभी चालीसा
+        </button>
+        <button class="tab-btn" onclick="loadTodayChalisa(this)">
+            ⭐ आज की चालीसा
+        </button>
     </div>
     <div id="chalisa-list">
         <div class="loading">चालीसा लोड हो रही है...</div>
@@ -183,8 +296,12 @@
 <div class="screen" id="screen-aarti">
     <div class="section-title">🪔 आरती</div>
     <div class="category-tabs">
-        <button class="tab-btn active" onclick="loadAartiList(this)">📋 सभी आरती</button>
-        <button class="tab-btn" onclick="loadTodayAarti(this)">⭐ आज की आरती</button>
+        <button class="tab-btn active" onclick="loadAartiList(this)">
+            📋 सभी आरती
+        </button>
+        <button class="tab-btn" onclick="loadTodayAarti(this)">
+            ⭐ आज की आरती
+        </button>
     </div>
     <div id="aarti-list">
         <div class="loading">आरती लोड हो रही है...</div>
@@ -203,40 +320,47 @@
 <div class="screen" id="screen-mantra">
     <div class="section-title">🕉️ मंत्र</div>
     <div class="category-tabs">
-        <button class="tab-btn active" onclick="loadMantraList(this)">📋 सभी मंत्र</button>
-        <button class="tab-btn" onclick="loadTodayMantra(this)">⭐ आज के मंत्र</button>
+        <button class="tab-btn active" onclick="loadMantraList(this)">
+            📋 सभी मंत्र
+        </button>
+        <button class="tab-btn" onclick="loadTodayMantra(this)">
+            ⭐ आज के मंत्र
+        </button>
     </div>
     <div id="mantra-list">
         <div class="loading">मंत्र लोड हो रही है...</div>
     </div>
 </div>
 
+<!-- ===== BOTTOM NAVIGATION ===== -->
 <div class="bottom-nav">
-    <button class="nav-btn active" id="nav-home" onclick="showScreen('home')">
+    <button class="nav-btn active" id="nav-home"
+            onclick="showScreen('home')">
         <span class="nav-icon">🏠</span>
         <span class="nav-label">होम</span>
     </button>
-    <button class="nav-btn" id="nav-rashifal" onclick="showScreen('rashifal')">
+    <button class="nav-btn" id="nav-rashifal"
+            onclick="showScreen('rashifal')">
         <span class="nav-icon">🔮</span>
         <span class="nav-label">राशिफल</span>
     </button>
-    <button class="nav-btn" id="nav-chalisa" onclick="showScreen('chalisa')">
-        <span class="nav-icon">📿</span>
-        <span class="nav-label">चालीसा</span>
+    <button class="nav-btn" id="nav-panchang"
+            onclick="showScreen('panchang')">
+        <span class="nav-icon">🗓️</span>
+        <span class="nav-label">पंचांग</span>
     </button>
-    <button class="nav-btn" id="nav-aarti" onclick="showScreen('aarti')">
-        <span class="nav-icon">🪔</span>
-        <span class="nav-label">आरती</span>
+    <button class="nav-btn" id="nav-kundali"
+            onclick="showScreen('kundali')">
+        <span class="nav-icon">👤</span>
+        <span class="nav-label">कुंडली</span>
     </button>
-    <button class="nav-btn" id="nav-mantra" onclick="showScreen('mantra')">
-        <span class="nav-icon">🕉️</span>
-        <span class="nav-label">मंत्र</span>
-    </button>
-    <button class="nav-btn" id="nav-status" onclick="showScreen('status')">
+    <button class="nav-btn" id="nav-status"
+            onclick="showScreen('status')">
         <span class="nav-icon">💬</span>
         <span class="nav-label">स्टेटस</span>
     </button>
 </div>
+
 <script src="/static/app.js"></script>
 </body>
 </html>

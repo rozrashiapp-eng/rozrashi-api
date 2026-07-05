@@ -48,6 +48,8 @@ function showScreen(screenName, addToHistory = true) {
     if (screenName === 'chalisa') loadChalisaList(document.querySelector('#screen-chalisa .tab-btn'));
     if (screenName === 'aarti') loadAartiList(document.querySelector('#screen-aarti .tab-btn'));
     if (screenName === 'mantra') loadMantraList(document.querySelector('#screen-mantra .tab-btn'));
+    if (screenName === 'panchang') loadPanchang();
+    if (screenName === 'kundali') { /* form is static, no load needed */ }
     previousScreen = screenName;
 }
 
@@ -621,6 +623,384 @@ async function showMantraDetail(key) {
     } catch (err) {
         container.innerHTML = '<div class="loading">लोड नहीं हो सकी।</div>';
     }
+}
+
+// ================================================================
+// ADD THESE FUNCTIONS IN app.js
+// Place them BEFORE the "// ===== INIT APP =====" line
+// ================================================================
+
+
+// ===== PANCHANG FUNCTIONS =====
+
+let panchangLat = 23.1765;  // Default Ujjain
+let panchangLng = 75.7885;
+let panchangLocationName = 'उज्जैन (डिफ़ॉल्ट)';
+
+async function loadPanchang() {
+    const content = document.getElementById('panchang-content');
+    const locationText = document.getElementById('panchang-location-text');
+
+    content.innerHTML = '<div class="loading">पंचांग लोड हो रही है...</div>';
+    if (locationText) {
+        locationText.textContent = `📍 ${panchangLocationName}`;
+    }
+
+    try {
+        const url = `${API_URL}/panchang?lat=${panchangLat}&lng=${panchangLng}&tz=5.5`;
+        const res = await fetch(url);
+        const json = await res.json();
+
+        if (!json.success) {
+            content.innerHTML = `<div class="loading">❌ ${json.message || 'लोड नहीं हो सकी'}</div>`;
+            return;
+        }
+
+        const d = json.data;
+
+        content.innerHTML = `
+            <!-- Date Header -->
+            <div class="rashi-detail-card" style="text-align:center;margin-bottom:16px;padding:16px;">
+                <div style="font-size:28px;margin-bottom:4px;">🗓️</div>
+                <h2 style="margin:4px 0;font-size:18px;">${json.date}</h2>
+                <div style="font-size:13px;color:#a78bfa;">${d.vikram_samvat ? `विक्रम संवत ${d.vikram_samvat}` : ''}</div>
+                <div style="font-size:13px;color:#94a3b8;">${d.lunar_month ? `${d.lunar_month} मास` : ''}</div>
+            </div>
+
+            <!-- Main Panchang Grid -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+
+                <div class="status-card" style="padding:12px;text-align:center;">
+                    <div style="font-size:11px;color:#FF6B00;font-weight:bold;margin-bottom:4px;">🌅 सूर्योदय</div>
+                    <div style="font-size:18px;font-weight:bold;color:#ffd200;">${d.sunrise || '--'}</div>
+                </div>
+
+                <div class="status-card" style="padding:12px;text-align:center;">
+                    <div style="font-size:11px;color:#FF6B00;font-weight:bold;margin-bottom:4px;">🌇 सूर्यास्त</div>
+                    <div style="font-size:18px;font-weight:bold;color:#ffd200;">${d.sunset || '--'}</div>
+                </div>
+
+            </div>
+
+            <!-- Tithi, Nakshatra, Yoga, Karan -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+
+                <div class="status-card" style="padding:12px;">
+                    <div style="font-size:11px;color:#FF6B00;font-weight:bold;margin-bottom:4px;">🌙 तिथि</div>
+                    <div style="font-size:15px;font-weight:bold;">${d.tithi || '--'}</div>
+                    ${d.tithi_ends ? `<div style="font-size:10px;color:#94a3b8;margin-top:4px;">समाप्त: ${d.tithi_ends}</div>` : ''}
+                </div>
+
+                <div class="status-card" style="padding:12px;">
+                    <div style="font-size:11px;color:#FF6B00;font-weight:bold;margin-bottom:4px;">⭐ नक्षत्र</div>
+                    <div style="font-size:15px;font-weight:bold;">${d.nakshatra || '--'}</div>
+                    ${d.nakshatra_lord ? `<div style="font-size:10px;color:#94a3b8;margin-top:4px;">स्वामी: ${d.nakshatra_lord}</div>` : ''}
+                </div>
+
+                <div class="status-card" style="padding:12px;">
+                    <div style="font-size:11px;color:#FF6B00;font-weight:bold;margin-bottom:4px;">🔯 योग</div>
+                    <div style="font-size:15px;font-weight:bold;">${d.yoga || '--'}</div>
+                    ${d.yoga_ends ? `<div style="font-size:10px;color:#94a3b8;margin-top:4px;">समाप्त: ${d.yoga_ends}</div>` : ''}
+                </div>
+
+                <div class="status-card" style="padding:12px;">
+                    <div style="font-size:11px;color:#FF6B00;font-weight:bold;margin-bottom:4px;">📿 करण</div>
+                    <div style="font-size:15px;font-weight:bold;">${d.karan || '--'}</div>
+                </div>
+
+            </div>
+
+            <!-- Rahu Kaal - highlighted in red -->
+            <div class="status-card"
+                 style="padding:14px;margin-bottom:12px;
+                        border:1px solid rgba(220,38,38,0.4);
+                        background:rgba(220,38,38,0.08);">
+                <div style="font-size:12px;color:#ef4444;font-weight:bold;margin-bottom:4px;">
+                    ⚠️ राहुकाल (अशुभ समय)
+                </div>
+                <div style="font-size:17px;font-weight:bold;color:#fca5a5;">
+                    ${d.rahu_kaal || '--'}
+                </div>
+                <div style="font-size:11px;color:#94a3b8;margin-top:4px;">
+                    इस समय में शुभ कार्य न करें
+                </div>
+            </div>
+
+            <!-- Share Panchang -->
+            <button onclick="sharePanchang('${json.date}', '${d.tithi}', '${d.nakshatra}', '${d.yoga}', '${d.rahu_kaal}', '${d.sunrise}', '${d.sunset}')"
+                    class="btn-share"
+                    style="width:100%;padding:12px;border-radius:12px;
+                           font-size:14px;margin-bottom:16px;">
+                📤 पंचांग WhatsApp पर शेयर करें
+            </button>
+        `;
+
+    } catch (err) {
+        content.innerHTML = '<div class="loading">❌ पंचांग लोड नहीं हो सका। इंटरनेट चेक करें।</div>';
+    }
+}
+
+function getPanchangLocation() {
+    if (!navigator.geolocation) {
+        showToast('❌ GPS इस डिवाइस पर उपलब्ध नहीं है');
+        return;
+    }
+
+    const locationText = document.getElementById('panchang-location-text');
+    if (locationText) locationText.textContent = '📍 स्थान प्राप्त हो रहा है...';
+
+    navigator.geolocation.getCurrentPosition(
+        async (position) => {
+            panchangLat = position.coords.latitude;
+            panchangLng = position.coords.longitude;
+
+            // Reverse geocode to get city name
+            try {
+                const res = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?lat=${panchangLat}&lon=${panchangLng}&format=json`,
+                    { headers: { 'User-Agent': 'RozRashi/1.0' } }
+                );
+                const json = await res.json();
+                const addr = json.address || {};
+                panchangLocationName = addr.city || addr.town || addr.village || 'आपका स्थान';
+            } catch {
+                panchangLocationName = 'आपका स्थान';
+            }
+
+            showToast(`✅ स्थान मिला: ${panchangLocationName}`);
+            loadPanchang();
+        },
+        (error) => {
+            showToast('❌ स्थान नहीं मिला। उज्जैन का पंचांग दिखाया जा रहा है।');
+            panchangLocationName = 'उज्जैन (डिफ़ॉल्ट)';
+            loadPanchang();
+        },
+        { timeout: 8000, maximumAge: 300000 }
+    );
+}
+
+function sharePanchang(date, tithi, nakshatra, yoga, rahu, sunrise, sunset) {
+    const text = `🗓️ आज का पंचांग — ${date}
+
+🌙 तिथि: ${tithi}
+⭐ नक्षत्र: ${nakshatra}
+🔯 योग: ${yoga}
+⚠️ राहुकाल: ${rahu}
+🌅 सूर्योदय: ${sunrise}
+🌇 सूर्यास्त: ${sunset}
+${APP_LINK}`;
+
+    if (window.Android) {
+        Android.shareText(text);
+    } else if (navigator.share) {
+        navigator.share({ text });
+    } else {
+        navigator.clipboard.writeText(text);
+        showToast('✅ पंचांग कॉपी हो गया!');
+    }
+}
+
+
+// ===== KUNDALI FUNCTIONS =====
+
+let citySearchTimeout = null;
+let selectedCityLat = null;
+let selectedCityLng = null;
+
+async function searchCity(query) {
+    clearTimeout(citySearchTimeout);
+    const suggestions = document.getElementById('city-suggestions');
+
+    if (query.length < 2) {
+        suggestions.style.display = 'none';
+        return;
+    }
+
+    citySearchTimeout = setTimeout(async () => {
+        try {
+            const res = await fetch(`${API_URL}/city-search?q=${encodeURIComponent(query)}`);
+            const json = await res.json();
+
+            if (json.data && json.data.length > 0) {
+                suggestions.innerHTML = '';
+                json.data.forEach(city => {
+                    const item = document.createElement('div');
+                    item.style = `padding:10px 12px;cursor:pointer;border-bottom:
+                                  1px solid rgba(255,107,0,0.1);font-size:13px;color:#fff;`;
+                    item.textContent = city.name + (city.full.includes(',') ?
+                        ' — ' + city.full.split(',').slice(1, 3).join(',').trim() : '');
+                    item.onmousedown = () => {
+                        document.getElementById('k-city').value = city.name;
+                        document.getElementById('k-lat').value  = city.lat;
+                        document.getElementById('k-lng').value  = city.lng;
+                        selectedCityLat = city.lat;
+                        selectedCityLng = city.lng;
+                        suggestions.style.display = 'none';
+                    };
+                    suggestions.appendChild(item);
+                });
+                suggestions.style.display = 'block';
+            } else {
+                suggestions.style.display = 'none';
+            }
+        } catch {
+            suggestions.style.display = 'none';
+        }
+    }, 400);
+}
+
+// Hide suggestions when clicking outside
+document.addEventListener('click', (e) => {
+    const suggestions = document.getElementById('city-suggestions');
+    if (suggestions && !suggestions.contains(e.target)) {
+        suggestions.style.display = 'none';
+    }
+});
+
+async function generateKundali() {
+    const name  = document.getElementById('k-name').value.trim() || 'जातक';
+    const dob   = document.getElementById('k-dob').value;
+    const tob   = document.getElementById('k-tob').value;
+    const city  = document.getElementById('k-city').value.trim();
+    const lat   = document.getElementById('k-lat').value;
+    const lng   = document.getElementById('k-lng').value;
+
+    // Validate
+    if (!dob) { showToast('❌ जन्म तिथि भरें'); return; }
+    if (!tob) { showToast('❌ जन्म समय भरें');  return; }
+    if (!city) { showToast('❌ जन्म स्थान भरें'); return; }
+    if (!lat)  { showToast('❌ सुझाव में से शहर चुनें'); return; }
+
+    const result = document.getElementById('kundali-result');
+    result.style.display = 'block';
+    result.innerHTML = '<div class="loading">🔮 कुंडली बन रही है...</div>';
+
+    // Scroll to result
+    result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    try {
+        const res = await fetch(`${API_URL}/kundali`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, dob, tob, city, lat: parseFloat(lat), lng: parseFloat(lng) })
+        });
+        const json = await res.json();
+
+        if (!json.success) {
+            result.innerHTML = `<div class="loading">❌ ${json.message}</div>`;
+            return;
+        }
+
+        // Build planets table HTML
+        let planetsHTML = '';
+        if (json.planets && json.planets.length > 0) {
+            planetsHTML = `
+                <div class="status-card" style="margin-bottom:12px;padding:14px;">
+                    <div style="font-size:13px;color:#FF6B00;font-weight:bold;margin-bottom:10px;">
+                        🪐 ग्रह स्थिति
+                    </div>
+                    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                        <tr style="color:#a78bfa;border-bottom:1px solid rgba(255,107,0,0.2);">
+                            <th style="text-align:left;padding:6px 4px;">ग्रह</th>
+                            <th style="text-align:left;padding:6px 4px;">राशि</th>
+                            <th style="text-align:right;padding:6px 4px;">अंश</th>
+                        </tr>
+                        ${json.planets.map(p => `
+                        <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <td style="padding:7px 4px;color:#fff;">
+                                ${p.name}
+                                ${p.is_retro ? '<span style="color:#ef4444;font-size:10px;">(वक्री)</span>' : ''}
+                            </td>
+                            <td style="padding:7px 4px;color:#ffd200;">${p.rashi}</td>
+                            <td style="padding:7px 4px;text-align:right;color:#94a3b8;">${p.degree}°</td>
+                        </tr>`).join('')}
+                    </table>
+                </div>
+            `;
+        }
+
+        // Build kundali chart HTML
+        let chartHTML = '';
+        if (json.kundali_svg) {
+            chartHTML = `
+                <div class="status-card" style="margin-bottom:12px;padding:14px;text-align:center;">
+                    <div style="font-size:13px;color:#FF6B00;font-weight:bold;margin-bottom:10px;">
+                        🔯 जन्म कुंडली चार्ट
+                    </div>
+                    <div style="max-width:300px;margin:0 auto;">
+                        ${json.kundali_svg}
+                    </div>
+                </div>
+            `;
+        }
+
+        result.innerHTML = `
+            <!-- Header -->
+            <div class="rashi-detail-card" style="text-align:center;margin-bottom:16px;padding:16px;">
+                <div style="font-size:32px;margin-bottom:6px;">🔮</div>
+                <h2 style="margin:4px 0;">${json.name} की कुंडली</h2>
+                <div style="font-size:13px;color:#a78bfa;margin-top:4px;">
+                    📅 ${json.dob} &nbsp;|&nbsp; ⏰ ${json.tob}
+                </div>
+                <div style="font-size:13px;color:#94a3b8;">
+                    📍 ${json.city}
+                </div>
+            </div>
+
+            ${chartHTML}
+            ${planetsHTML}
+
+            <!-- Share button -->
+            <button onclick="shareKundali('${json.name}', '${json.dob}', '${json.tob}', '${json.city}')"
+                    class="btn-share"
+                    style="width:100%;padding:12px;border-radius:12px;
+                           font-size:14px;margin-bottom:8px;">
+                📤 कुंडली WhatsApp पर शेयर करें
+            </button>
+
+            <!-- New Kundali button -->
+            <button onclick="resetKundali()"
+                    class="btn-copy"
+                    style="width:100%;padding:12px;border-radius:12px;
+                           font-size:13px;margin-bottom:16px;">
+                🔄 नई कुंडली बनाएं
+            </button>
+        `;
+
+    } catch (err) {
+        result.innerHTML = '<div class="loading">❌ कुंडली नहीं बन सकी। पुनः प्रयास करें।</div>';
+    }
+}
+
+function shareKundali(name, dob, tob, city) {
+    const text = `🔮 ${name} की जन्म कुंडली
+
+📅 जन्म तिथि: ${dob}
+⏰ जन्म समय: ${tob}
+📍 जन्म स्थान: ${city}
+
+अपनी कुंडली देखें RozRashi App पर!
+${APP_LINK}`;
+
+    if (window.Android) {
+        Android.shareText(text);
+    } else if (navigator.share) {
+        navigator.share({ text });
+    } else {
+        navigator.clipboard.writeText(text);
+        showToast('✅ कुंडली जानकारी कॉपी हो गई!');
+    }
+}
+
+function resetKundali() {
+    document.getElementById('k-name').value = '';
+    document.getElementById('k-dob').value  = '';
+    document.getElementById('k-tob').value  = '';
+    document.getElementById('k-city').value = '';
+    document.getElementById('k-lat').value  = '';
+    document.getElementById('k-lng').value  = '';
+    document.getElementById('kundali-result').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ===== INIT APP =====

@@ -169,6 +169,496 @@ def get_mantra(day):
         "message": "Mantra not found"
     }), 404
 
+# ═══════════════════════════════════════
+# ADD THESE IMPORTS AT TOP OF app.py
+# (after existing imports)
+# ═══════════════════════════════════════
+
+# import requests   ← already exists
+# These are already imported, no new imports needed
+
+
+# ═══════════════════════════════════════
+# PANCHANG ROUTES
+# Add after mantra routes
+# ═══════════════════════════════════════
+
+# Default location — Ujjain (traditional Panchang city)
+DEFAULT_LAT  = 23.1765
+DEFAULT_LNG  = 75.7885
+DEFAULT_TZ   = 5.5
+
+# Hindi translations for Panchang fields
+TITHI_NAMES = {
+    "Pratipada": "प्रतिपदा", "Dwitiya": "द्वितीया",
+    "Tritiya": "तृतीया", "Chaturthi": "चतुर्थी",
+    "Panchami": "पंचमी", "Shashthi": "षष्ठी",
+    "Saptami": "सप्तमी", "Ashtami": "अष्टमी",
+    "Navami": "नवमी", "Dashami": "दशमी",
+    "Ekadashi": "एकादशी", "Dwadashi": "द्वादशी",
+    "Trayodashi": "त्रयोदशी", "Chaturdashi": "चतुर्दशी",
+    "Purnima": "पूर्णिमा", "Amavasya": "अमावस्या",
+    "Shashti": "षष्ठी", "Shukla": "शुक्ल",
+    "Krishna": "कृष्ण"
+}
+
+NAKSHATRA_NAMES = {
+    "Ashwini": "अश्विनी", "Bharani": "भरणी",
+    "Krittika": "कृत्तिका", "Rohini": "रोहिणी",
+    "Mrigashira": "मृगशिरा", "Ardra": "आर्द्रा",
+    "Punarvasu": "पुनर्वसु", "Pushya": "पुष्य",
+    "Ashlesha": "आश्लेषा", "Magha": "मघा",
+    "Purva Phalguni": "पूर्व फाल्गुनी",
+    "Uttara Phalguni": "उत्तर फाल्गुनी",
+    "Hasta": "हस्त", "Chitra": "चित्रा",
+    "Swati": "स्वाती", "Vishakha": "विशाखा",
+    "Anuradha": "अनुराधा", "Jyeshtha": "ज्येष्ठा",
+    "Mula": "मूल", "Purva Ashadha": "पूर्वाषाढ़ा",
+    "Uttara Ashadha": "उत्तराषाढ़ा",
+    "Shravana": "श्रवण", "Dhanishtha": "धनिष्ठा",
+    "Shatabhisha": "शतभिषा",
+    "Purva Bhadrapada": "पूर्व भाद्रपद",
+    "Uttara Bhadrapada": "उत्तर भाद्रपद",
+    "Revati": "रेवती"
+}
+
+YOGA_NAMES = {
+    "Vishkambha": "विष्कम्भ", "Priti": "प्रीति",
+    "Ayushman": "आयुष्मान", "Saubhagya": "सौभाग्य",
+    "Shobhana": "शोभन", "Atiganda": "अतिगण्ड",
+    "Sukarma": "सुकर्मा", "Dhriti": "धृति",
+    "Shula": "शूल", "Ganda": "गण्ड",
+    "Vriddhi": "वृद्धि", "Dhruva": "ध्रुव",
+    "Vyaghata": "व्याघात", "Harshana": "हर्षण",
+    "Vajra": "वज्र", "Siddhi": "सिद्धि",
+    "Vyatipata": "व्यतीपात", "Variyan": "वरीयान",
+    "Parigha": "परिघ", "Shiva": "शिव",
+    "Siddha": "सिद्ध", "Sadhya": "साध्य",
+    "Shubha": "शुभ", "Shukla": "शुक्ल",
+    "Brahma": "ब्रह्म", "Indra": "इन्द्र",
+    "Vaidhriti": "वैधृति"
+}
+
+KARAN_NAMES = {
+    "Bava": "बव", "Balava": "बालव",
+    "Kaulava": "कौलव", "Taitila": "तैतिल",
+    "Garaja": "गरज", "Vanija": "वणिज",
+    "Vishti": "विष्टि", "Bhadra": "भद्रा",
+    "Shakuni": "शकुनि", "Chatushpada": "चतुष्पाद",
+    "Naga": "नाग", "Kimstughna": "किंस्तुघ्न",
+    "Vanij": "वणिज"
+}
+
+PAKSHA_NAMES = {
+    "Shukla": "शुक्ल पक्ष",
+    "Krishna": "कृष्ण पक्ष"
+}
+
+def translate_panchang(data):
+    """Translate English panchang fields to Hindi"""
+    try:
+        result = {}
+
+        # Sunrise / Sunset
+        result["sunrise"]     = data.get("sunrise", "--")
+        result["sunset"]      = data.get("sunset", "--")
+
+        # Tithi
+        tithi = data.get("tithi", {})
+        tithi_name = tithi.get("name", "")
+        paksha     = tithi.get("paksha", "")
+        tithi_hi   = TITHI_NAMES.get(tithi_name, tithi_name)
+        paksha_hi  = PAKSHA_NAMES.get(paksha, paksha)
+        result["tithi"] = f"{paksha_hi} {tithi_hi}"
+        result["tithi_ends"] = tithi.get("ends_at", "")
+
+        # Nakshatra
+        nakshatra      = data.get("nakshatra", {})
+        nak_name       = nakshatra.get("name", "")
+        result["nakshatra"]      = NAKSHATRA_NAMES.get(nak_name, nak_name)
+        result["nakshatra_lord"] = nakshatra.get("lord", "")
+        result["nakshatra_ends"] = nakshatra.get("ends_at", "")
+
+        # Yoga
+        yoga      = data.get("yoga", {})
+        yoga_name = yoga.get("name", "")
+        result["yoga"]      = YOGA_NAMES.get(yoga_name, yoga_name)
+        result["yoga_ends"] = yoga.get("ends_at", "")
+
+        # Karan
+        karanas = data.get("karanas", [])
+        if karanas:
+            karan_name = karanas[0].get("name", "")
+            result["karan"] = KARAN_NAMES.get(karan_name, karan_name)
+        else:
+            result["karan"] = "--"
+
+        # Rahu Kaal
+        rahu = data.get("rahu_kalam", {})
+        result["rahu_kaal"] = (
+            f"{rahu.get('start', '--')} - {rahu.get('end', '--')}"
+        )
+
+        # Lunar month
+        lunar = data.get("lunar_month", {})
+        result["lunar_month"]   = lunar.get("name", "--")
+        result["vikram_samvat"] = str(lunar.get("vikram_samvat", "--"))
+
+        # Weekday
+        weekday = data.get("weekday", {})
+        result["weekday"] = weekday.get("name", "--")
+
+        return result
+    except Exception as e:
+        print(f"Panchang translate error: {e}")
+        return {}
+
+
+@app.route('/panchang')
+def get_panchang():
+    """Get today's panchang — uses query params lat/lng or defaults to Ujjain"""
+    try:
+        lat = float(request.args.get('lat', DEFAULT_LAT))
+        lng = float(request.args.get('lng', DEFAULT_LNG))
+        tz  = float(request.args.get('tz',  DEFAULT_TZ))
+
+        now = datetime.now(IST)
+
+        api_key = os.environ.get('FREE_ASTRO_API_KEY')
+        if not api_key:
+            return jsonify({
+                "success": False,
+                "message": "API key not configured"
+            }), 500
+
+        payload = {
+            "year":      now.year,
+            "month":     now.month,
+            "date":      now.day,
+            "hours":     now.hour,
+            "minutes":   now.minute,
+            "seconds":   0,
+            "latitude":  lat,
+            "longitude": lng,
+            "timezone":  tz,
+            "config": {
+                "observation_point": "topocentric",
+                "ayanamsha": "lahiri"
+            }
+        }
+
+        headers = {
+            "Content-Type": "application/json",
+            "x-api-key": api_key
+        }
+
+        response = requests.post(
+            "https://json.freeastrologyapi.com/complete-panchang",
+            json=payload,
+            headers=headers,
+            timeout=10
+        )
+
+        if response.status_code == 200:
+            raw_data = response.json()
+            translated = translate_panchang(raw_data)
+            return jsonify({
+                "success": True,
+                "date": now.strftime("%d %B %Y"),
+                "location": {
+                    "lat": lat,
+                    "lng": lng,
+                    "is_default": lat == DEFAULT_LAT and lng == DEFAULT_LNG
+                },
+                "data": translated,
+                "raw": raw_data
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "message": f"API error: {response.status_code}",
+                "detail": response.text
+            }), 500
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
+# ═══════════════════════════════════════
+# KUNDALI ROUTES
+# Add after panchang routes
+# ═══════════════════════════════════════
+
+# Prokerala token cache (valid for 1 hour)
+_prokerala_token = None
+_prokerala_token_expiry = None
+
+def get_prokerala_token():
+    """Get OAuth token from Prokerala — cached for 1 hour"""
+    global _prokerala_token, _prokerala_token_expiry
+
+    now = datetime.now(IST)
+
+    # Return cached token if still valid
+    if _prokerala_token and _prokerala_token_expiry:
+        if now < _prokerala_token_expiry:
+            return _prokerala_token
+
+    client_id     = os.environ.get('PROKERALA_CLIENT_ID')
+    client_secret = os.environ.get('PROKERALA_CLIENT_SECRET')
+
+    if not client_id or not client_secret:
+        return None
+
+    try:
+        response = requests.post(
+            "https://api.prokerala.com/token",
+            data={
+                "grant_type":    "client_credentials",
+                "client_id":     client_id,
+                "client_secret": client_secret
+            },
+            timeout=10
+        )
+
+        if response.status_code == 200:
+            token_data = response.json()
+            _prokerala_token = token_data.get("access_token")
+            # Cache for 55 minutes (token valid for 60 min)
+            from datetime import timedelta
+            _prokerala_token_expiry = now + timedelta(minutes=55)
+            return _prokerala_token
+        return None
+
+    except Exception as e:
+        print(f"Prokerala token error: {e}")
+        return None
+
+
+def get_coordinates_from_city(city_name):
+    """Get lat/lng from city name using OpenStreetMap Nominatim"""
+    try:
+        response = requests.get(
+            "https://nominatim.openstreetmap.org/search",
+            params={
+                "q":      city_name + ", India",
+                "format": "json",
+                "limit":  1
+            },
+            headers={"User-Agent": "RozRashi/1.0"},
+            timeout=5
+        )
+        if response.status_code == 200:
+            results = response.json()
+            if results:
+                return {
+                    "lat":          float(results[0]["lat"]),
+                    "lng":          float(results[0]["lon"]),
+                    "display_name": results[0]["display_name"]
+                }
+        return None
+    except Exception as e:
+        print(f"Geocoding error: {e}")
+        return None
+
+
+@app.route('/kundali', methods=['POST'])
+def get_kundali():
+    """Generate Kundali from birth details"""
+    try:
+        data = request.get_json()
+
+        name     = data.get('name', 'जातक')
+        dob      = data.get('dob')   # "YYYY-MM-DD"
+        tob      = data.get('tob')   # "HH:MM"
+        city     = data.get('city')  # "Mumbai"
+        lat      = data.get('lat')
+        lng      = data.get('lng')
+
+        # Validate required fields
+        if not dob or not tob or (not city and not lat):
+            return jsonify({
+                "success": False,
+                "message": "कृपया जन्म तिथि, समय और स्थान भरें।"
+            }), 400
+
+        # Get coordinates if city provided
+        if city and not lat:
+            coords = get_coordinates_from_city(city)
+            if not coords:
+                return jsonify({
+                    "success": False,
+                    "message": f"'{city}' शहर नहीं मिला। कृपया दूसरा नाम डालें।"
+                }), 400
+            lat = coords["lat"]
+            lng = coords["lng"]
+
+        # Parse date and time
+        date_parts = dob.split('-')
+        time_parts = tob.split(':')
+        year  = int(date_parts[0])
+        month = int(date_parts[1])
+        day   = int(date_parts[2])
+        hour  = int(time_parts[0])
+        minute = int(time_parts[1])
+
+        # Format datetime for Prokerala
+        datetime_str = f"{dob}T{tob}:00+05:30"
+
+        # Get token
+        token = get_prokerala_token()
+        if not token:
+            return jsonify({
+                "success": False,
+                "message": "कुंडली सेवा अभी उपलब्ध नहीं है।"
+            }), 500
+
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type":  "application/json"
+        }
+
+        # Call Prokerala Kundali API
+        params = {
+            "ayanamsa":          1,  # Lahiri
+            "coordinates":       f"{lat},{lng}",
+            "datetime":          datetime_str,
+            "chart_type":        "rasi",
+            "chart_style":       "north-indian",
+            "format":            "svg"
+        }
+
+        kundali_response = requests.get(
+            "https://api.prokerala.com/v2/astrology/kundli",
+            params=params,
+            headers=headers,
+            timeout=15
+        )
+
+        # Also get planet positions
+        planet_params = {
+            "ayanamsa":    1,
+            "coordinates": f"{lat},{lng}",
+            "datetime":    datetime_str
+        }
+
+        planet_response = requests.get(
+            "https://api.prokerala.com/v2/astrology/planet-position",
+            params=planet_params,
+            headers=headers,
+            timeout=15
+        )
+
+        kundali_data = {}
+        planet_data  = {}
+
+        if kundali_response.status_code == 200:
+            kundali_data = kundali_response.json()
+
+        if planet_response.status_code == 200:
+            planet_data = planet_response.json()
+
+        # Build Hindi planet names map
+        planet_hindi = {
+            "Sun":     "सूर्य ☀️",
+            "Moon":    "चंद्र 🌙",
+            "Mars":    "मंगल 🔴",
+            "Mercury": "बुध 💚",
+            "Jupiter": "गुरु 🟡",
+            "Venus":   "शुक्र ⚪",
+            "Saturn":  "शनि ⚫",
+            "Rahu":    "राहु 🌑",
+            "Ketu":    "केतु 🌒",
+            "Ascendant": "लग्न ⬆️"
+        }
+
+        rashi_hindi = {
+            "Aries":       "मेष ♈",
+            "Taurus":      "वृषभ ♉",
+            "Gemini":      "मिथुन ♊",
+            "Cancer":      "कर्क ♋",
+            "Leo":         "सिंह ♌",
+            "Virgo":       "कन्या ♍",
+            "Libra":       "तुला ♎",
+            "Scorpio":     "वृश्चिक ♏",
+            "Sagittarius": "धनु ♐",
+            "Capricorn":   "मकर ♑",
+            "Aquarius":    "कुंभ ♒",
+            "Pisces":      "मीन ♓"
+        }
+
+        # Format planet positions for display
+        planets_formatted = []
+        if planet_data.get("data", {}).get("planet_position"):
+            for planet in planet_data["data"]["planet_position"]:
+                p_name = planet.get("name", "")
+                p_rashi = planet.get("rasi", {}).get("name", "")
+                p_deg   = round(planet.get("degree", 0), 2)
+                planets_formatted.append({
+                    "name":       planet_hindi.get(p_name, p_name),
+                    "rashi":      rashi_hindi.get(p_rashi, p_rashi),
+                    "degree":     p_deg,
+                    "is_retro":   planet.get("is_retrograde", False)
+                })
+
+        return jsonify({
+            "success": True,
+            "name":    name,
+            "dob":     f"{day:02d}/{month:02d}/{year}",
+            "tob":     tob,
+            "city":    city or f"{lat}, {lng}",
+            "kundali_svg":   kundali_data.get("data", {}).get("svg", ""),
+            "planets":       planets_formatted,
+            "lagna":         kundali_data.get("data", {}).get("ascendant", {})
+        })
+
+    except Exception as e:
+        print(f"Kundali error: {e}")
+        return jsonify({
+            "success": False,
+            "message": "कुंडली बनाने में समस्या आई। पुनः प्रयास करें।"
+        }), 500
+
+
+@app.route('/city-search')
+def city_search():
+    """Search Indian cities for Kundali birth place"""
+    try:
+        query = request.args.get('q', '')
+        if len(query) < 2:
+            return jsonify({"success": True, "data": []})
+
+        response = requests.get(
+            "https://nominatim.openstreetmap.org/search",
+            params={
+                "q":              query + ", India",
+                "format":         "json",
+                "limit":          5,
+                "addressdetails": 1
+            },
+            headers={"User-Agent": "RozRashi/1.0"},
+            timeout=5
+        )
+
+        if response.status_code == 200:
+            results = response.json()
+            cities = []
+            for r in results:
+                cities.append({
+                    "name": r.get("display_name", "").split(",")[0].strip(),
+                    "full": r.get("display_name", ""),
+                    "lat":  float(r["lat"]),
+                    "lng":  float(r["lon"])
+                })
+            return jsonify({"success": True, "data": cities})
+
+        return jsonify({"success": True, "data": []})
+
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
 
 # ════════════════════════════════════════
 #  STATUS DATA
