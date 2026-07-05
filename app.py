@@ -6,7 +6,7 @@ from mantra_data import MANTRA_DATA
 from aarti_data import AARTI_DATA
 from tithi_data import get_today_tithi
 from festivals_data import get_today_festival
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 IST = pytz.timezone('Asia/Kolkata')
 import os
@@ -170,21 +170,19 @@ def get_mantra(day):
         "message": "Mantra not found"
     }), 404
 
-
 # ═══════════════════════════════════════
 # PANCHANG ROUTES
-# Add after mantra routes
 # ═══════════════════════════════════════
 
 # Default location — Ujjain (traditional Panchang city)
 DEFAULT_LAT = 23.1765
 DEFAULT_LNG = 75.7885
 DEFAULT_TZ  = 5.5
- 
+
 BASE_URL = "https://json.freeastrologyapi.com"
- 
+
 # ── Hindi translation tables ──────────────────────────────────────────────────
- 
+
 TITHI_NAMES = {
     "Pratipada": "प्रतिपदा", "Dwitiya": "द्वितीया", "Tritiya": "तृतीया",
     "Chaturthi": "चतुर्थी", "Panchami": "पंचमी", "Shashthi": "षष्ठी",
@@ -193,10 +191,9 @@ TITHI_NAMES = {
     "Trayodashi": "त्रयोदशी", "Chaturdashi": "चतुर्दशी",
     "Purnima": "पूर्णिमा", "Amavasya": "अमावस्या", "Shashti": "षष्ठी",
     "Shukla": "शुक्ल", "Krishna": "कृष्ण",
-    # API spelling variants
     "Shahshthi": "षष्ठी", "Shashhthi": "षष्ठी",
 }
- 
+
 NAKSHATRA_NAMES = {
     "Ashwini": "अश्विनी", "Bharani": "भरणी", "Krittika": "कृत्तिका",
     "Rohini": "रोहिणी", "Mrigashira": "मृगशिरा", "Ardra": "आर्द्रा",
@@ -210,8 +207,7 @@ NAKSHATRA_NAMES = {
     "Purva Bhadrapada": "पूर्व भाद्रपद", "Uttara Bhadrapada": "उत्तर भाद्रपद",
     "Revati": "रेवती",
 }
- 
-# API returns slightly different spellings — normalize before lookup
+
 NAKSHATRA_ALIASES = {
     "Poorvaabhadra":  "Purva Bhadrapada",
     "Uttarabhadra":   "Uttara Bhadrapada",
@@ -223,13 +219,11 @@ NAKSHATRA_ALIASES = {
     "Chitta":         "Chitra",
     "Swathi":         "Swati",
     "Visakha":        "Vishakha",
-    "Jyeshtha":       "Jyeshtha",
     "Poorvabhadra":   "Purva Bhadrapada",
-    "Uttarabhadra":   "Uttara Bhadrapada",
     "Dhanistha":      "Dhanishtha",
     "Sravana":        "Shravana",
 }
- 
+
 YOGA_NAMES = {
     "Vishkambha": "विष्कम्भ", "Priti": "प्रीति", "Ayushman": "आयुष्मान",
     "Saubhagya": "सौभाग्य", "Shobhana": "शोभन", "Atiganda": "अतिगण्ड",
@@ -241,39 +235,37 @@ YOGA_NAMES = {
     "Sadhya": "साध्य", "Shubha": "शुभ", "Brahma": "ब्रह्म",
     "Indra": "इन्द्र", "Vaidhriti": "वैधृति",
 }
- 
-# API spelling variants for yoga
+
 YOGA_ALIASES = {
     "Soubhaagya": "Saubhagya",
     "Sobhana":    "Shobhana",
     "Sukharma":   "Sukarma",
 }
- 
+
 KARAN_NAMES = {
     "Bava": "बव", "Balava": "बालव", "Kaulava": "कौलव", "Taitila": "तैतिल",
     "Garaja": "गरज", "Vanija": "वणिज", "Vanij": "वणिज", "Vishti": "विष्टि",
     "Bhadra": "भद्रा", "Shakuni": "शकुनि", "Chatushpada": "चतुष्पाद",
     "Naga": "नाग", "Kimstughna": "किंस्तुघ्न",
-    # API spelling variants
     "Garija": "गरज", "Taitula": "तैतिल",
 }
- 
+
 PAKSHA_NAMES = {
     "Shukla": "शुक्ल पक्ष",
     "Krishna": "कृष्ण पक्ष",
 }
- 
-# ── Simple in-memory daily cache (default Ujjain only) ───────────────────────
+
+# ── In-memory daily cache (default Ujjain only) ───────────────────────────────
 _panchang_cache = {"date_key": None, "payload": None}
- 
- 
+
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
- 
+
 def _get_headers():
     api_key = os.environ.get('FREE_ASTRO_API_KEY')
     return {"Content-Type": "application/json", "x-api-key": api_key}, api_key
- 
- 
+
+
 def _base_payload(now, lat, lng, tz):
     return {
         "year": now.year, "month": now.month, "date": now.day,
@@ -281,14 +273,9 @@ def _base_payload(now, lat, lng, tz):
         "latitude": lat, "longitude": lng, "timezone": tz,
         "config": {"observation_point": "topocentric", "ayanamsha": "lahiri"}
     }
- 
- 
+
+
 def _call_endpoint(path, payload, headers, timeout=10):
-    """
-    Call one API endpoint.
-    Returns (ok: bool, data: dict|None, raw_text: str).
-    Detects rate-limit and deprecation errors at any nesting level.
-    """
     try:
         resp = requests.post(
             f"{BASE_URL}/{path}", json=payload,
@@ -296,44 +283,34 @@ def _call_endpoint(path, payload, headers, timeout=10):
         )
         if resp.status_code != 200:
             return False, None, f"HTTP {resp.status_code}: {resp.text}"
- 
+
         data = resp.json()
- 
-        # Unwrap {"statusCode": 200, "output": ...} wrapper if present
+
         unwrapped = data
         if isinstance(data, dict) and "output" in data:
             unwrapped = data["output"]
- 
-        # Detect error messages inside output (e.g. "Limit Exceeded")
+
         if isinstance(unwrapped, dict) and "message" in unwrapped:
-            msg = unwrapped["message"]
-            return False, None, str(msg)
- 
-        # Detect plain string errors
+            return False, None, str(unwrapped["message"])
+
         if isinstance(unwrapped, str):
             lower = unwrapped.lower()
             if "deprecat" in lower or "limit" in lower or "error" in lower:
                 return False, None, unwrapped
- 
+
         return True, data, resp.text
- 
+
     except Exception as e:
         return False, None, str(e)
- 
- 
+
+
 def _unwrap(data):
-    """Unwrap {"statusCode":..., "output": ...} → output."""
     if isinstance(data, dict) and "output" in data:
         return data["output"]
     return data
- 
- 
+
+
 def _first_item(d):
-    """
-    Endpoints like tithi/yoga/karana return {"1": {...}, "2": {...}}.
-    The active (current) entry is always "1".
-    If already a flat dict with "name", return as-is.
-    """
     if not isinstance(d, dict):
         return {}
     if "name" in d:
@@ -343,10 +320,9 @@ def _first_item(d):
     if isinstance(d, list) and d:
         return d[0]
     return {}
- 
- 
+
+
 def _dig(d, *keys, default=None):
-    """Try several possible key names; return the first non-empty hit."""
     for k in keys:
         if isinstance(k, tuple):
             cur, ok = d, True
@@ -362,24 +338,17 @@ def _dig(d, *keys, default=None):
             if isinstance(d, dict) and k in d and d[k] not in (None, ""):
                 return d[k]
     return default
- 
- 
-# ── Main fetch function ───────────────────────────────────────────────────────
- 
+
+
 def fetch_full_panchang(lat, lng, tz, now, debug_raw=False):
-    """
-    Calls all 9 endpoints with 1-second gaps (free tier limit),
-    parses and translates the results into Hindi.
-    Returns (translated_dict, None) on success, (None, error_dict) on failure.
-    """
     headers, api_key = _get_headers()
     if not api_key:
         return None, {"success": False, "message": "FREE_ASTRO_API_KEY not set in environment"}
- 
+
     payload  = _base_payload(now, lat, lng, tz)
     result   = {}
     raw_dump = {}
- 
+
     endpoints = {
         "sun":       "getsunriseandset",
         "tithi":     "tithi-durations",
@@ -391,25 +360,23 @@ def fetch_full_panchang(lat, lng, tz, now, debug_raw=False):
         "samvat":    "samvatinfo",
         "rahu":      "rahu-kalam",
     }
- 
+
     endpoint_items = list(endpoints.items())
     errors = {}
- 
+
     for i, (key, path) in enumerate(endpoint_items):
         ok, data, raw_text = _call_endpoint(path, payload, headers)
         raw_dump[key] = raw_text
- 
+
         if ok:
-            result[key] = _unwrap(data)   # always unwrap at ingest
+            result[key] = _unwrap(data)
         else:
             result[key] = None
             errors[key] = raw_text
- 
-        # Free tier = 1 request/second; skip sleep after the last call
+
         if i < len(endpoint_items) - 1:
             time.sleep(1.1)
- 
-    # ── If ALL endpoints failed, surface a clean error ────────────────────────
+
     all_failed = all(v is None for v in result.values())
     if all_failed:
         first_err = next(iter(errors.values()), "Unknown API error")
@@ -423,16 +390,15 @@ def fetch_full_panchang(lat, lng, tz, now, debug_raw=False):
             "hint": hint,
             "errors": errors if debug_raw else None,
         }
- 
+
     translated = {}
- 
-    # ── Sunrise / Sunset ──────────────────────────────────────────────────────
+
+    # Sunrise / Sunset
     sun = result.get("sun") or {}
     translated["sunrise"] = _dig(sun, "sun_rise_time", "sun_rise", "sunrise", default="--")
     translated["sunset"]  = _dig(sun, "sun_set_time",  "sun_set",  "sunset",  default="--")
- 
-    # ── Tithi ─────────────────────────────────────────────────────────────────
-    # After unwrap: {"1": {name, paksha, completion, ...}, "2": {...}}
+
+    # Tithi
     tithi_item = _first_item(result.get("tithi") or {})
     tithi_name = _dig(tithi_item, "name", "tithi_name", default="")
     paksha     = _dig(tithi_item, "paksha", default="")
@@ -440,40 +406,34 @@ def fetch_full_panchang(lat, lng, tz, now, debug_raw=False):
     paksha_hi  = PAKSHA_NAMES.get(paksha.capitalize() if paksha else "", paksha)
     translated["tithi"]      = f"{paksha_hi} {tithi_hi}".strip() or "--"
     translated["tithi_ends"] = _dig(tithi_item, "completion", "ends_at", "completes_at", default="")
- 
-    # ── Nakshatra ─────────────────────────────────────────────────────────────
-    # After unwrap: flat dict {number, name, starts_at, ends_at, lord, ...}
+
+    # Nakshatra
     nak      = result.get("nakshatra") or {}
     nak_name = _dig(nak, "name", "nakshatra_name", default="")
     nak_norm = NAKSHATRA_ALIASES.get(nak_name, nak_name)
     translated["nakshatra"]      = NAKSHATRA_NAMES.get(nak_norm, nak_name) or "--"
     translated["nakshatra_lord"] = _dig(nak, "lord", "nakshatra_lord", default="")
     translated["nakshatra_ends"] = _dig(nak, "ends_at", "completion", "completes_at", default="")
- 
-    # ── Yoga ──────────────────────────────────────────────────────────────────
-    # After unwrap: {"1": {number, name, yoga_left_percentage, completion}, "2": {...}}
+
+    # Yoga
     yoga_item = _first_item(result.get("yoga") or {})
     yoga_name = _dig(yoga_item, "name", "yoga_name", default="")
     yoga_norm = YOGA_ALIASES.get(yoga_name, yoga_name)
     translated["yoga"]      = YOGA_NAMES.get(yoga_norm, yoga_name) or "--"
     translated["yoga_ends"] = _dig(yoga_item, "completion", "ends_at", "completes_at", default="")
- 
-    # ── Karan ─────────────────────────────────────────────────────────────────
-    # After unwrap: {"1": {number, name, karana_left_percentage, completion}, ...}
+
+    # Karan
     karan_item = _first_item(result.get("karana") or {})
     karan_name = _dig(karan_item, "name", "karan_name", default="")
     translated["karan"] = KARAN_NAMES.get(karan_name, karan_name) or "--"
- 
-    # ── Rahu Kaal ─────────────────────────────────────────────────────────────
-    # After unwrap: {starts_at, ends_at}
+
+    # Rahu Kaal
     rahu    = result.get("rahu") or {}
     r_start = _dig(rahu, "starts_at", "start_time", "start", default="--")
     r_end   = _dig(rahu, "ends_at",   "end_time",   "end",   default="--")
     translated["rahu_kaal"] = f"{r_start} - {r_end}"
- 
-    # ── Lunar Month ───────────────────────────────────────────────────────────
-    # After unwrap: {lunar_month_number, lunar_month_name, lunar_month_full_name,
-    #                adhika, nija, kshaya}
+
+    # Lunar Month
     lunar = result.get("lunar") or {}
     translated["lunar_month"] = _dig(
         lunar,
@@ -481,12 +441,8 @@ def fetch_full_panchang(lat, lng, tz, now, debug_raw=False):
         default="--"
     )
     translated["adhika_maas"] = bool(_dig(lunar, "adhika", default=0))
- 
-    # ── Vikram Samvat ─────────────────────────────────────────────────────────
-    # After unwrap: {status, timestamp, saka_salivahana_name_number,
-    #                saka_salivahana_year_name, saka_salivahana_year_number,
-    #                vikram_chaitradi_number, vikram_chaitradi_name_number,
-    #                vikram_chaitradi_year_name, vikram_chairadi_year_name}
+
+    # Vikram Samvat
     samvat = result.get("samvat") or {}
     translated["vikram_samvat"] = str(_dig(
         samvat,
@@ -499,33 +455,27 @@ def fetch_full_panchang(lat, lng, tz, now, debug_raw=False):
     translated["samvat_name"] = _dig(
         samvat,
         "vikram_chaitradi_year_name",
-        "vikram_chairadi_year_name",   # API has a typo variant too
+        "vikram_chairadi_year_name",
         default=""
     )
- 
-    # ── Weekday ───────────────────────────────────────────────────────────────
-    # After unwrap: {weekday_number, weekday_name, vedic_weekday_number,
-    #                vedic_weekday_name}
+
+    # Weekday
     weekday = result.get("weekday") or {}
     translated["weekday"] = _dig(
         weekday,
         "vedic_weekday_name", "weekday_name", "name",
         default="--"
     )
- 
+
     if debug_raw:
         translated["_raw_debug"] = raw_dump
- 
+
     return translated, None
- 
- 
-# ── Route ─────────────────────────────────────────────────────────────────────
- 
+
+
 @app.route('/panchang')
 def get_panchang():
     """
-    Get today's Panchang.
- 
     Query params:
       lat, lng, tz  — location (defaults to Ujjain)
       debug=1       — include raw API responses in output
@@ -537,23 +487,22 @@ def get_panchang():
         tz    = float(request.args.get('tz',  DEFAULT_TZ))
         debug = request.args.get('debug', '') == '1'
         force = request.args.get('force', '') == '1'
- 
+
         now        = datetime.now(IST)
         is_default = (lat == DEFAULT_LAT and lng == DEFAULT_LNG and tz == DEFAULT_TZ)
         today_key  = now.strftime("%Y-%m-%d")
- 
-        # ── Serve from cache if valid (saves all 9 API calls) ─────────────────
+
+        # Serve from cache if valid
         if is_default and not force and _panchang_cache["date_key"] == today_key:
             cached = dict(_panchang_cache["payload"])
             if debug:
                 cached["cache_hit"] = True
             return jsonify(cached)
- 
-        # ── Call API ──────────────────────────────────────────────────────────
+
         translated, err = fetch_full_panchang(lat, lng, tz, now, debug_raw=debug)
- 
+
         if err:
-            # Serve stale cache rather than a blank error if we have one
+            # Serve stale cache rather than blank error
             if _panchang_cache["payload"]:
                 stale = dict(_panchang_cache["payload"])
                 stale["stale"]        = True
@@ -561,8 +510,7 @@ def get_panchang():
                 stale["hint"]         = err.get("hint", "")
                 return jsonify(stale)
             return jsonify(err), 502
- 
-        # ── Basic sanity check ────────────────────────────────────────────────
+
         if (translated.get("sunrise", "--") == "--"
                 and translated.get("tithi", "--") in ("--", " --", "")):
             return jsonify({
@@ -570,47 +518,38 @@ def get_panchang():
                 "message": "Panchang data unavailable from provider",
                 "debug":   translated.get("_raw_debug") if debug else None
             }), 502
- 
+
         response_payload = {
             "success":  True,
             "date":     now.strftime("%d %B %Y"),
             "location": {"lat": lat, "lng": lng, "is_default": is_default},
             "data":     translated,
         }
- 
-        # ── Update cache (default Ujjain only, not on debug runs) ─────────────
+
         if is_default and not debug:
             _panchang_cache["date_key"] = today_key
             _panchang_cache["payload"]  = response_payload
- 
+
         return jsonify(response_payload)
- 
+
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
 # ═══════════════════════════════════════
 # KUNDALI ROUTES
-# Add after panchang routes
 # ═══════════════════════════════════════
 
-# Prokerala token cache (valid for 1 hour)
-_prokerala_token = None
+_prokerala_token        = None
 _prokerala_token_expiry = None
 
 def get_prokerala_token():
-    """Get OAuth token from Prokerala — cached for 1 hour"""
     global _prokerala_token, _prokerala_token_expiry
-
     now = datetime.now(IST)
-
-    # Return cached token if still valid
-    if _prokerala_token and _prokerala_token_expiry:
-        if now < _prokerala_token_expiry:
-            return _prokerala_token
+    if _prokerala_token and _prokerala_token_expiry and now < _prokerala_token_expiry:
+        return _prokerala_token
 
     client_id     = os.environ.get('PROKERALA_CLIENT_ID')
     client_secret = os.environ.get('PROKERALA_CLIENT_SECRET')
-
     if not client_id or not client_secret:
         return None
 
@@ -624,31 +563,22 @@ def get_prokerala_token():
             },
             timeout=10
         )
-
         if response.status_code == 200:
             token_data = response.json()
-            _prokerala_token = token_data.get("access_token")
-            # Cache for 55 minutes (token valid for 60 min)
-            from datetime import timedelta
+            _prokerala_token        = token_data.get("access_token")
             _prokerala_token_expiry = now + timedelta(minutes=55)
             return _prokerala_token
         return None
-
     except Exception as e:
         print(f"Prokerala token error: {e}")
         return None
 
 
 def get_coordinates_from_city(city_name):
-    """Get lat/lng from city name using OpenStreetMap Nominatim"""
     try:
         response = requests.get(
             "https://nominatim.openstreetmap.org/search",
-            params={
-                "q":      city_name + ", India",
-                "format": "json",
-                "limit":  1
-            },
+            params={"q": city_name + ", India", "format": "json", "limit": 1},
             headers={"User-Agent": "RozRashi/1.0"},
             timeout=5
         )
@@ -668,25 +598,21 @@ def get_coordinates_from_city(city_name):
 
 @app.route('/kundali', methods=['POST'])
 def get_kundali():
-    """Generate Kundali from birth details"""
     try:
         data = request.get_json()
+        name = data.get('name', 'जातक')
+        dob  = data.get('dob')
+        tob  = data.get('tob')
+        city = data.get('city')
+        lat  = data.get('lat')
+        lng  = data.get('lng')
 
-        name     = data.get('name', 'जातक')
-        dob      = data.get('dob')   # "YYYY-MM-DD"
-        tob      = data.get('tob')   # "HH:MM"
-        city     = data.get('city')  # "Mumbai"
-        lat      = data.get('lat')
-        lng      = data.get('lng')
-
-        # Validate required fields
         if not dob or not tob or (not city and not lat):
             return jsonify({
                 "success": False,
                 "message": "कृपया जन्म तिथि, समय और स्थान भरें।"
             }), 400
 
-        # Get coordinates if city provided
         if city and not lat:
             coords = get_coordinates_from_city(city)
             if not coords:
@@ -697,19 +623,11 @@ def get_kundali():
             lat = coords["lat"]
             lng = coords["lng"]
 
-        # Parse date and time
-        date_parts = dob.split('-')
-        time_parts = tob.split(':')
-        year  = int(date_parts[0])
-        month = int(date_parts[1])
-        day   = int(date_parts[2])
-        hour  = int(time_parts[0])
-        minute = int(time_parts[1])
-
-        # Format datetime for Prokerala
+        date_parts   = dob.split('-')
+        time_parts   = tob.split(':')
+        year, month, day = int(date_parts[0]), int(date_parts[1]), int(date_parts[2])
         datetime_str = f"{dob}T{tob}:00+05:30"
 
-        # Get token
         token = get_prokerala_token()
         if not token:
             return jsonify({
@@ -722,98 +640,65 @@ def get_kundali():
             "Content-Type":  "application/json"
         }
 
-        # Call Prokerala Kundali API
-        params = {
-            "ayanamsa":          1,  # Lahiri
-            "coordinates":       f"{lat},{lng}",
-            "datetime":          datetime_str,
-            "chart_type":        "rasi",
-            "chart_style":       "north-indian",
-            "format":            "svg"
-        }
-
         kundali_response = requests.get(
             "https://api.prokerala.com/v2/astrology/kundli",
-            params=params,
-            headers=headers,
-            timeout=15
+            params={
+                "ayanamsa":    1,
+                "coordinates": f"{lat},{lng}",
+                "datetime":    datetime_str,
+                "chart_type":  "rasi",
+                "chart_style": "north-indian",
+                "format":      "svg"
+            },
+            headers=headers, timeout=15
         )
-
-        # Also get planet positions
-        planet_params = {
-            "ayanamsa":    1,
-            "coordinates": f"{lat},{lng}",
-            "datetime":    datetime_str
-        }
 
         planet_response = requests.get(
             "https://api.prokerala.com/v2/astrology/planet-position",
-            params=planet_params,
-            headers=headers,
-            timeout=15
+            params={
+                "ayanamsa":    1,
+                "coordinates": f"{lat},{lng}",
+                "datetime":    datetime_str
+            },
+            headers=headers, timeout=15
         )
 
-        kundali_data = {}
-        planet_data  = {}
+        kundali_data = kundali_response.json() if kundali_response.status_code == 200 else {}
+        planet_data  = planet_response.json()  if planet_response.status_code == 200  else {}
 
-        if kundali_response.status_code == 200:
-            kundali_data = kundali_response.json()
-
-        if planet_response.status_code == 200:
-            planet_data = planet_response.json()
-
-        # Build Hindi planet names map
         planet_hindi = {
-            "Sun":     "सूर्य ☀️",
-            "Moon":    "चंद्र 🌙",
-            "Mars":    "मंगल 🔴",
-            "Mercury": "बुध 💚",
-            "Jupiter": "गुरु 🟡",
-            "Venus":   "शुक्र ⚪",
-            "Saturn":  "शनि ⚫",
-            "Rahu":    "राहु 🌑",
-            "Ketu":    "केतु 🌒",
+            "Sun": "सूर्य ☀️", "Moon": "चंद्र 🌙", "Mars": "मंगल 🔴",
+            "Mercury": "बुध 💚", "Jupiter": "गुरु 🟡", "Venus": "शुक्र ⚪",
+            "Saturn": "शनि ⚫", "Rahu": "राहु 🌑", "Ketu": "केतु 🌒",
             "Ascendant": "लग्न ⬆️"
         }
-
         rashi_hindi = {
-            "Aries":       "मेष ♈",
-            "Taurus":      "वृषभ ♉",
-            "Gemini":      "मिथुन ♊",
-            "Cancer":      "कर्क ♋",
-            "Leo":         "सिंह ♌",
-            "Virgo":       "कन्या ♍",
-            "Libra":       "तुला ♎",
-            "Scorpio":     "वृश्चिक ♏",
-            "Sagittarius": "धनु ♐",
-            "Capricorn":   "मकर ♑",
-            "Aquarius":    "कुंभ ♒",
-            "Pisces":      "मीन ♓"
+            "Aries": "मेष ♈", "Taurus": "वृषभ ♉", "Gemini": "मिथुन ♊",
+            "Cancer": "कर्क ♋", "Leo": "सिंह ♌", "Virgo": "कन्या ♍",
+            "Libra": "तुला ♎", "Scorpio": "वृश्चिक ♏", "Sagittarius": "धनु ♐",
+            "Capricorn": "मकर ♑", "Aquarius": "कुंभ ♒", "Pisces": "मीन ♓"
         }
 
-        # Format planet positions for display
         planets_formatted = []
-        if planet_data.get("data", {}).get("planet_position"):
-            for planet in planet_data["data"]["planet_position"]:
-                p_name = planet.get("name", "")
-                p_rashi = planet.get("rasi", {}).get("name", "")
-                p_deg   = round(planet.get("degree", 0), 2)
-                planets_formatted.append({
-                    "name":       planet_hindi.get(p_name, p_name),
-                    "rashi":      rashi_hindi.get(p_rashi, p_rashi),
-                    "degree":     p_deg,
-                    "is_retro":   planet.get("is_retrograde", False)
-                })
+        for planet in planet_data.get("data", {}).get("planet_position", []):
+            p_name  = planet.get("name", "")
+            p_rashi = planet.get("rasi", {}).get("name", "")
+            planets_formatted.append({
+                "name":     planet_hindi.get(p_name, p_name),
+                "rashi":    rashi_hindi.get(p_rashi, p_rashi),
+                "degree":   round(planet.get("degree", 0), 2),
+                "is_retro": planet.get("is_retrograde", False)
+            })
 
         return jsonify({
-            "success": True,
-            "name":    name,
-            "dob":     f"{day:02d}/{month:02d}/{year}",
-            "tob":     tob,
-            "city":    city or f"{lat}, {lng}",
-            "kundali_svg":   kundali_data.get("data", {}).get("svg", ""),
-            "planets":       planets_formatted,
-            "lagna":         kundali_data.get("data", {}).get("ascendant", {})
+            "success":     True,
+            "name":        name,
+            "dob":         f"{day:02d}/{month:02d}/{year}",
+            "tob":         tob,
+            "city":        city or f"{lat}, {lng}",
+            "kundali_svg": kundali_data.get("data", {}).get("svg", ""),
+            "planets":     planets_formatted,
+            "lagna":       kundali_data.get("data", {}).get("ascendant", {})
         })
 
     except Exception as e:
@@ -826,7 +711,6 @@ def get_kundali():
 
 @app.route('/city-search')
 def city_search():
-    """Search Indian cities for Kundali birth place"""
     try:
         query = request.args.get('q', '')
         if len(query) < 2:
@@ -843,11 +727,9 @@ def city_search():
             headers={"User-Agent": "RozRashi/1.0"},
             timeout=5
         )
-
         if response.status_code == 200:
-            results = response.json()
             cities = []
-            for r in results:
+            for r in response.json():
                 cities.append({
                     "name": r.get("display_name", "").split(",")[0].strip(),
                     "full": r.get("display_name", ""),
@@ -855,7 +737,6 @@ def city_search():
                     "lng":  float(r["lon"])
                 })
             return jsonify({"success": True, "data": cities})
-
         return jsonify({"success": True, "data": []})
 
     except Exception as e:
@@ -1240,13 +1121,8 @@ STATUS_DATA = {
 # ════════════════════════════════════════
 
 HINDI_DAYS = {
-    0: "सोमवार",
-    1: "मंगलवार",
-    2: "बुधवार",
-    3: "गुरुवार",
-    4: "शुक्रवार",
-    5: "शनिवार",
-    6: "रविवार"
+    0: "सोमवार", 1: "मंगलवार", 2: "बुधवार", 3: "गुरुवार",
+    4: "शुक्रवार", 5: "शनिवार", 6: "रविवार"
 }
 
 CHALISA_INFO = {
@@ -1274,22 +1150,27 @@ AARTI_INFO = {
 # ════════════════════════════════════════
 
 def send_onesignal_notification(title, message):
+    api_key = os.environ.get('ONESIGNAL_API_KEY')
+    app_id  = os.environ.get('ONESIGNAL_APP_ID')
+    if not api_key or not app_id:
+        print("❌ OneSignal credentials missing")
+        return None
+
     headers = {
-        "Authorization": f"Basic {os.environ.get('ONESIGNAL_API_KEY')}",
-        "Content-Type": "application/json"
+        "Authorization": f"Basic {api_key}",
+        "Content-Type":  "application/json"
     }
     payload = {
-        "app_id": os.environ.get("ONESIGNAL_APP_ID"),
+        "app_id":            app_id,
         "included_segments": ["All"],
-        "headings": {"en": title, "hi": title},
-        "contents": {"en": message, "hi": message},
-        "small_icon": "ic_stat_onesignal_default"
+        "headings":          {"en": title, "hi": title},
+        "contents":          {"en": message, "hi": message},
+        "small_icon":        "ic_stat_onesignal_default"
     }
     try:
         response = requests.post(
             "https://onesignal.com/api/v1/notifications",
-            json=payload,
-            headers=headers
+            json=payload, headers=headers
         )
         print(f"Notification sent: {response.status_code}")
         return response.json()
@@ -1299,10 +1180,7 @@ def send_onesignal_notification(title, message):
 
 
 def send_morning_notification():
-    """6:00 AM - Smart notification based on today"""
-    from tithi_data import get_today_tithi
-
-    # Check tithi first (highest priority)
+    """6:00 AM — tithi > festival > default rashifal"""
     tithi = get_today_tithi()
     if tithi:
         send_onesignal_notification(
@@ -1310,8 +1188,6 @@ def send_morning_notification():
             tithi["notification_msg"]
         )
         return
-
-    # Check festival
     festival = get_today_festival()
     if festival:
         send_onesignal_notification(
@@ -1319,8 +1195,6 @@ def send_morning_notification():
             festival["notification_msg"]
         )
         return
-
-    # Normal day - Rashifal notification
     send_onesignal_notification(
         "🌅 शुभ प्रभात! आज का राशिफल तैयार है",
         "आज का दिन कैसा रहेगा? अपनी राशि चेक करें "
@@ -1329,54 +1203,71 @@ def send_morning_notification():
 
 
 def send_aarti_notification():
-    """8:00 AM - Stotra + Aarti"""
-    day = datetime.now(IST).weekday()
+    """8:00 AM — Aarti reminder"""
+    day   = datetime.now(IST).weekday()
     aarti = AARTI_INFO[day]
     send_onesignal_notification(
         f"🪔 संध्या आरती — {aarti['name']}",
-        f"आज की {aarti['name']} करें और "
-        f"ईश्वर का आभार व्यक्त करें "
-        f"{aarti['emoji']} 🙏"
+        f"आज की {aarti['name']} करें और ईश्वर का आभार व्यक्त करें {aarti['emoji']} 🙏"
     )
 
 
 def send_chalisa_notification():
-    """7:00 PM - Chalisa + Mantra"""
-    day = datetime.now(IST).weekday()
+    """7:00 PM — Chalisa reminder"""
+    day       = datetime.now(IST).weekday()
     hindi_day = HINDI_DAYS[day]
-    chalisa = CHALISA_INFO[day]
+    chalisa   = CHALISA_INFO[day]
     send_onesignal_notification(
         f"{chalisa['emoji']} आज की चालीसा — {chalisa['name']}",
-        f"आज {hindi_day} है। {chalisa['god']} की "
-        f"{chalisa['name']} पढ़ें और मंत्र जपें। "
+        f"आज {hindi_day} है। {chalisa['god']} की {chalisa['name']} पढ़ें और मंत्र जपें। "
         f"मन को शांति और आशीर्वाद मिलेगा 🕉️"
     )
 
 
 # ════════════════════════════════════════
-#  SCHEDULER
+#  PANCHANG CACHE WARMER
+# ════════════════════════════════════════
+
+def warm_panchang_cache():
+    """Pre-fills the panchang cache. Safe to call anytime — skips if already warm."""
+    try:
+        now       = datetime.now(IST)
+        today_key = now.strftime("%Y-%m-%d")
+        if _panchang_cache["date_key"] == today_key:
+            print("Panchang cache already warm ✅")
+            return
+        print("Warming panchang cache...")
+        translated, err = fetch_full_panchang(
+            DEFAULT_LAT, DEFAULT_LNG, DEFAULT_TZ, now, debug_raw=False
+        )
+        if err:
+            print(f"Panchang cache warm failed: {err}")
+            return
+        _panchang_cache["date_key"] = today_key
+        _panchang_cache["payload"]  = {
+            "success":  True,
+            "date":     now.strftime("%d %B %Y"),
+            "location": {"lat": DEFAULT_LAT, "lng": DEFAULT_LNG, "is_default": True},
+            "data":     translated,
+        }
+        print("Panchang cache warmed ✅")
+    except Exception as e:
+        print(f"Panchang warm error: {e}")
+
+
+# ════════════════════════════════════════
+#  SCHEDULER  (single definition)
 # ════════════════════════════════════════
 
 def start_scheduler():
     scheduler = BackgroundScheduler(timezone=IST)
-
-    # 6:00 AM - Good Morning + Rashifal
-    scheduler.add_job(
-        send_morning_notification,
-        'cron', hour=6, minute=0)
-
-    # 8:00 AM - Stotra + Aarti
-    scheduler.add_job(
-        send_aarti_notification,
-        'cron', hour=8, minute=0)
-
-    # 7:00 PM - Chalisa + Mantra
-    scheduler.add_job(
-        send_chalisa_notification,
-        'cron', hour=19, minute=0)
-
+    scheduler.add_job(send_morning_notification,  'cron', hour=6,  minute=0)
+    scheduler.add_job(send_aarti_notification,    'cron', hour=8,  minute=0)
+    scheduler.add_job(send_chalisa_notification,  'cron', hour=19, minute=0)
+    scheduler.add_job(warm_panchang_cache,        'cron', hour=5,  minute=30)
     scheduler.start()
     print("Scheduler started ✅")
+
 
 # ════════════════════════════════════════
 #  ROUTES
@@ -1384,10 +1275,7 @@ def start_scheduler():
 
 @app.route('/')
 def home():
-    return jsonify({
-        "message": "RozRashi API is running!",
-        "version": "2.0"
-    })
+    return jsonify({"message": "RozRashi API is running!", "version": "2.0"})
 
 @app.route('/app')
 def app_ui():
@@ -1399,10 +1287,7 @@ def privacy_policy():
 
 @app.route('/rashifal')
 def get_all_rashifal():
-    return jsonify({
-        "success": True,
-        "data": get_rashifal_today()
-    })
+    return jsonify({"success": True, "data": get_rashifal_today()})
 
 @app.route('/rashifal/<int:rashi_id>')
 def get_rashifal_by_id(rashi_id):
@@ -1410,6 +1295,11 @@ def get_rashifal_by_id(rashi_id):
     if rashi:
         return jsonify({"success": True, "data": rashi})
     return jsonify({"success": False, "message": "Rashi not found"}), 404
+
+# NOTE: static route defined BEFORE dynamic route to avoid Flask ambiguity
+@app.route('/status/categories/all')
+def get_categories():
+    return jsonify({"success": True, "categories": list(STATUS_DATA.keys())})
 
 @app.route('/status/<category>')
 def get_status_by_category(category):
@@ -1420,27 +1310,13 @@ def get_status_by_category(category):
 
 @app.route('/today/special')
 def get_today_special():
-    """Returns today's special event if any"""
-    from tithi_data import get_today_tithi
     tithi = get_today_tithi()
     if tithi:
-        return jsonify({"success": True,
-                       "type": "tithi",
-                       "data": tithi})
+        return jsonify({"success": True, "type": "tithi", "data": tithi})
     festival = get_today_festival()
     if festival:
-        return jsonify({"success": True,
-                       "type": "festival",
-                       "data": festival})
-    return jsonify({"success": False,
-                   "message": "No special event today"})
-
-@app.route('/status/categories/all')
-def get_categories():
-    return jsonify({
-        "success": True,
-        "categories": list(STATUS_DATA.keys())
-    })
+        return jsonify({"success": True, "type": "festival", "data": festival})
+    return jsonify({"success": False, "message": "No special event today"})
 
 # ════════════════════════════════════════
 #  NOTIFICATION TEST ROUTES
@@ -1462,12 +1338,11 @@ def trigger_chalisa():
     return jsonify({"status": "Chalisa sent ✅"})
 
 # ════════════════════════════════════════
-#  RUN
+#  RUN  (single block)
 # ════════════════════════════════════════
 
-# Start scheduler
-start_scheduler()
-
 if __name__ == '__main__':
+    start_scheduler()
+    warm_panchang_cache()
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
