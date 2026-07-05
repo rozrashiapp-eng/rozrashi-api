@@ -281,27 +281,26 @@ def _dig(d, *keys, default=None):
  
  
 def fetch_full_panchang(lat, lng, tz, now, debug_raw):
-    """Calls all 9 endpoints and assembles the translated result."""
     headers, api_key = _get_headers()
     if not api_key:
         return None, {"success": False, "message": "API key not configured"}
- 
+
     payload = _base_payload(now, lat, lng, tz)
     result = {}
- 
+    raw_dump = {}
+
     endpoints = {
         "sun":       "getsunriseandset",
         "tithi":     "tithi-durations",
         "nakshatra": "nakshatra-durations",
         "yoga":      "yoga-durations",
         "karana":    "karana-durations",
-        "weekday":   "vedicweekday",        # confirmed
-        "lunar":     "lunarmonthinfo",       # confirmed
-        "samvat":    "samvatinfo",           # confirmed
+        "weekday":   "vedicweekday",
+        "lunar":     "lunarmonthinfo",
+        "samvat":    "samvatinfo",
         "rahu":      "rahu-kalam",
     }
- 
-    raw_dump = {}
+
     endpoint_items = list(endpoints.items())
     for i, (key, path) in enumerate(endpoint_items):
         ok, data, raw_text = _call_endpoint(path, payload, headers)
@@ -309,82 +308,118 @@ def fetch_full_panchang(lat, lng, tz, now, debug_raw):
         if not ok:
             result[key] = None
         else:
-            # Some endpoints wrap in {"statusCode":200,"output":{...}} — unwrap if present
-            if isinstance(data, dict) and "output" in data and isinstance(data["output"], dict):
+            # Always unwrap statusCode/output wrapper first
+            if isinstance(data, dict) and "output" in data:
                 data = data["output"]
             result[key] = data
-        # Free tier = 1 request/second. Sleep between calls (skip after the last one).
         if i < len(endpoint_items) - 1:
             time.sleep(1.1)
- 
+
     translated = {}
- 
-    # Sunrise / Sunset — try a few likely key names
+
+    # ── Sunrise / Sunset ──────────────────────────────────────────
     sun = result.get("sun") or {}
     translated["sunrise"] = _dig(sun, "sun_rise_time", "sun_rise", "sunrise", default="--")
-    translated["sunset"]  = _dig(sun, "sun_set_time", "sun_set", "sunset", default="--")
- 
-    # Tithi
-    tithi = result.get("tithi") or {}
-    tithi_name = _dig(tithi, "name", "tithi_name", default="")
-    paksha     = _dig(tithi, "paksha", default="")
+    translated["sunset"]  = _dig(sun, "sun_set_time",  "sun_set",  "sunset",  default="--")
+
+    # ── Tithi ─────────────────────────────────────────────────────
+    # After unwrap, tithi output = {"1": {name, paksha, ...}, "2": ...}
+    tithi_raw  = result.get("tithi") or {}
+    tithi_item = tithi_raw.get("1", tithi_raw)  # get first active tithi
+    tithi_name = _dig(tithi_item, "name", "tithi_name", default="")
+    paksha     = _dig(tithi_item, "paksha", default="")
     tithi_hi   = TITHI_NAMES.get(tithi_name, tithi_name) or "--"
     paksha_hi  = PAKSHA_NAMES.get(paksha.capitalize() if paksha else "", paksha)
-    translated["tithi"] = f"{paksha_hi} {tithi_hi}".strip() or "--"
-    translated["tithi_ends"] = _dig(tithi, "ends_at", "completes_at", "end_time", default="")
- 
-    # Nakshatra
-    nak = result.get("nakshatra") or {}
+    translated["tithi"]      = f"{paksha_hi} {tithi_hi}".strip() or "--"
+    translated["tithi_ends"] = _dig(tithi_item, "ends_at", "completes_at", "completion", default="")
+
+    # ── Nakshatra ─────────────────────────────────────────────────
+    # After unwrap, nakshatra output = {number, name, starts_at, ...} (flat)
+    nak      = result.get("nakshatra") or {}
     nak_name = _dig(nak, "name", "nakshatra_name", default="")
-    translated["nakshatra"] = NAKSHATRA_NAMES.get(nak_name, nak_name) or "--"
-    translated["nakshatra_lord"] = _dig(nak, "lord", "nakshatra_lord", default="")
-    translated["nakshatra_ends"] = _dig(nak, "ends_at", "completes_at", "completion", default="")
- 
-    def _first_indexed_item(d):
-        """Yoga/Karana endpoints return {"1": {...}, "2": {...}, ...} —
-        the currently active one is always index '1' (the earliest/first
-        entry for the requested moment)."""
-        if isinstance(d, dict):
-            if "name" in d:  # already a flat single object
-                return d
-            if "1" in d and isinstance(d["1"], dict):
-                return d["1"]
-        if isinstance(d, list) and d:
-            return d[0]
-        return {}
- 
-    # Yoga
-    yoga_item = _first_indexed_item(result.get("yoga") or {})
+    # Normalize spelling differences from API
+    NAKSHATRA_ALIASES = {
+        "Poorvaabhadra": "Purva Bhadrapada",
+        "Uttarabhadra":  "Uttara Bhadrapada",
+        "Poorvaphalguni": "Purva Phalguni",
+        "Uttaraphalguni": "Uttara Phalguni",
+        "Poorvashadha":  "Purva Ashadha",
+        "Uttarashadha":  "Uttara Ashadha",
+        "Soubhaagya":    "Saubhagya",    # yoga alias, but safe here too
+    }
+    nak_normalized = NAKSHATRA_ALIASES.get(nak_name, nak_name)
+    translated["nakshatra"]       = NAKSHATRA_NAMES.get(nak_normalized, nak_name) or "--"
+    translated["nakshatra_lord"]  = _dig(nak, "lord", "nakshatra_lord", default="")
+    translated["nakshatra_ends"]  = _dig(nak, "ends_at", "starts_at", "completion", default="")
+
+    # ── Yoga ──────────────────────────────────────────────────────
+    yoga_raw  = result.get("yoga") or {}
+    yoga_item = yoga_raw.get("1", yoga_raw)
     yoga_name = _dig(yoga_item, "name", "yoga_name", default="")
-    translated["yoga"] = YOGA_NAMES.get(yoga_name, yoga_name) or "--"
+    # API returns "Soubhaagya" instead of "Saubhagya"
+    YOGA_ALIASES = {
+        "Soubhaagya": "Saubhagya",
+        "Atiganda":   "Atiganda",
+    }
+    yoga_normalized = YOGA_ALIASES.get(yoga_name, yoga_name)
+    translated["yoga"]      = YOGA_NAMES.get(yoga_normalized, yoga_name) or "--"
     translated["yoga_ends"] = _dig(yoga_item, "completion", "ends_at", "completes_at", default="")
- 
-    # Karan
-    karan_item = _first_indexed_item(result.get("karana") or {})
+
+    # ── Karan ─────────────────────────────────────────────────────
+    karan_raw  = result.get("karana") or {}
+    karan_item = karan_raw.get("1", karan_raw)
     karan_name = _dig(karan_item, "name", "karan_name", default="")
     translated["karan"] = KARAN_NAMES.get(karan_name, karan_name) or "--"
- 
-    # Rahu Kaal — confirmed field names: starts_at / ends_at
-    rahu = result.get("rahu") or {}
+
+    # ── Rahu Kaal ─────────────────────────────────────────────────
+    rahu    = result.get("rahu") or {}
     r_start = _dig(rahu, "starts_at", "start_time", "start", default="--")
-    r_end   = _dig(rahu, "ends_at", "end_time", "end", default="--")
+    r_end   = _dig(rahu, "ends_at",   "end_time",   "end",   default="--")
     translated["rahu_kaal"] = f"{r_start} - {r_end}"
- 
-    # Lunar month + Vikram Samvat
+
+    # ── Lunar Month ───────────────────────────────────────────────
+    # API: {lunar_month_number, lunar_month_name, lunar_month_full_name, adhika, nija, kshaya}
     lunar = result.get("lunar") or {}
-    translated["lunar_month"] = _dig(lunar, "name", "lunar_month_name", "lunar_month_full_name", default="--")
+    translated["lunar_month"] = _dig(
+        lunar,
+        "lunar_month_full_name", "lunar_month_name", "name",
+        default="--"
+    )
+    translated["adhika_maas"] = bool(_dig(lunar, "adhika", default=0))
+
+    # ── Vikram Samvat ─────────────────────────────────────────────
+    # API: {status, timestamp, saka_salivahana_name_number, saka_salivahana_year_name,
+    #       saka_salivahana_year_number, vikram_chaitradi_number, vikram_chaitradi_name_number,
+    #       vikram_chaitradi_year_name, vikram_chairadi_year_name}
     samvat = result.get("samvat") or {}
-    translated["vikram_samvat"] = str(_dig(samvat, "vikram_samvat", "vikram_samvat_year", default="--"))
- 
-    # Weekday
+    vs_year = _dig(
+        samvat,
+        "vikram_chaitradi_number",
+        "vikram_chaitradi_name_number",
+        "vikram_samvat",
+        "vikram_samvat_year",
+        default="--"
+    )
+    translated["vikram_samvat"] = str(vs_year)
+    translated["samvat_name"]   = _dig(
+        samvat,
+        "vikram_chaitradi_year_name",
+        "vikram_chairadi_year_name",   # typo variant in API
+        default=""
+    )
+
+    # ── Weekday ───────────────────────────────────────────────────
     weekday = result.get("weekday") or {}
-    translated["weekday"] = _dig(weekday, "name", "weekday_name", "vedic_weekday_name", default="--")
- 
+    translated["weekday"] = _dig(
+        weekday,
+        "vedic_weekday_name", "weekday_name", "name",
+        default="--"
+    )
+
     if debug_raw:
         translated["_raw_debug"] = raw_dump
- 
+
     return translated, None
- 
  
 @app.route('/panchang')
 def get_panchang():
