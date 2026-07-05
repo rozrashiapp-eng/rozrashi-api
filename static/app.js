@@ -1216,50 +1216,39 @@ function shareImage() {
     small.height = 540;
     small.getContext('2d').drawImage(canvas, 0, 0, 540, 540);
 
-    // ✅ Android WebView
+    const shareText = currentStatusText + APP_LINK;
+
+    // ✅ Android WebView — use text share (WhatsApp ignores text when image attached)
     if (window.Android) {
-        const base64 = small.toDataURL('image/jpeg', 0.85).split(',')[1];
         closeGenerator();
         setTimeout(() => {
-            Android.shareImageWithText(
-                base64,
-                '📲 RozRashi App Download करें 👇\nhttps://play.google.com/store/apps/details?id=com.rozrashi.app'
-            );
-        }, 400);
+            Android.shareText(shareText);
+        }, 300);
         return;
     }
 
-    // ✅ Web browser — share text IMMEDIATELY in same user gesture
-    // DO NOT close generator before share, DO NOT use setTimeout
-    const shareText = currentStatusText + APP_LINK;
-
+    // ✅ Web browser
     if (navigator.share) {
         navigator.share({ text: shareText })
-            .then(() => {
-                closeGenerator(); // close AFTER share succeeds
-            })
+            .then(() => closeGenerator())
             .catch(err => {
                 if (err.name !== 'AbortError') {
-                    // Share failed — fallback to clipboard
                     navigator.clipboard.writeText(shareText)
                         .then(() => {
                             closeGenerator();
                             showToast('✅ कॉपी हो गया! WhatsApp पर पेस्ट करें');
                         });
                 } else {
-                    // User cancelled share — just close
                     closeGenerator();
                 }
             });
     } else {
-        // No share API — copy to clipboard
         navigator.clipboard.writeText(shareText)
             .then(() => {
                 closeGenerator();
                 showToast('✅ कॉपी हो गया! WhatsApp पर पेस्ट करें');
             })
             .catch(() => {
-                // Last fallback — download image
                 closeGenerator();
                 const link = document.createElement('a');
                 link.download = 'rozrashi-status.jpg';
