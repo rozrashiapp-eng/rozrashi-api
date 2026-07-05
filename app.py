@@ -176,7 +176,6 @@ def get_mantra(day):
 # ═══════════════════════════════════════
 
 # Default location — Ujjain (traditional Panchang city)
-# Default location — Ujjain (traditional Panchang city)
 DEFAULT_LAT = 23.1765
 DEFAULT_LNG = 75.7885
 DEFAULT_TZ  = 5.5
@@ -295,23 +294,27 @@ def fetch_full_panchang(lat, lng, tz, now, debug_raw):
         "nakshatra": "nakshatra-durations",
         "yoga":      "yoga-durations",
         "karana":    "karana-durations",
-        "weekday":   "vedic-weekday",
-        "lunar":     "lunar-month-info",
-        "samvat":    "samvat-info",
+        "weekday":   "vedicweekday",        # confirmed
+        "lunar":     "lunarmonthinfo",       # confirmed
+        "samvat":    "samvatinfo",           # confirmed
         "rahu":      "rahu-kalam",
     }
  
     raw_dump = {}
-    for key, path in endpoints.items():
+    endpoint_items = list(endpoints.items())
+    for i, (key, path) in enumerate(endpoint_items):
         ok, data, raw_text = _call_endpoint(path, payload, headers)
         raw_dump[key] = raw_text
         if not ok:
             result[key] = None
-            continue
-        # Some endpoints wrap in {"statusCode":200,"output":{...}} — unwrap if present
-        if isinstance(data, dict) and "output" in data and isinstance(data["output"], dict):
-            data = data["output"]
-        result[key] = data
+        else:
+            # Some endpoints wrap in {"statusCode":200,"output":{...}} — unwrap if present
+            if isinstance(data, dict) and "output" in data and isinstance(data["output"], dict):
+                data = data["output"]
+            result[key] = data
+        # Free tier = 1 request/second. Sleep between calls (skip after the last one).
+        if i < len(endpoint_items) - 1:
+            time.sleep(1.1)
  
     translated = {}
  
@@ -334,25 +337,36 @@ def fetch_full_panchang(lat, lng, tz, now, debug_raw):
     nak_name = _dig(nak, "name", "nakshatra_name", default="")
     translated["nakshatra"] = NAKSHATRA_NAMES.get(nak_name, nak_name) or "--"
     translated["nakshatra_lord"] = _dig(nak, "lord", "nakshatra_lord", default="")
-    translated["nakshatra_ends"] = _dig(nak, "ends_at", "completes_at", default="")
+    translated["nakshatra_ends"] = _dig(nak, "ends_at", "completes_at", "completion", default="")
+ 
+    def _first_indexed_item(d):
+        """Yoga/Karana endpoints return {"1": {...}, "2": {...}, ...} —
+        the currently active one is always index '1' (the earliest/first
+        entry for the requested moment)."""
+        if isinstance(d, dict):
+            if "name" in d:  # already a flat single object
+                return d
+            if "1" in d and isinstance(d["1"], dict):
+                return d["1"]
+        if isinstance(d, list) and d:
+            return d[0]
+        return {}
  
     # Yoga
-    yoga = result.get("yoga") or {}
-    yoga_name = _dig(yoga, "name", "yoga_name", default="")
+    yoga_item = _first_indexed_item(result.get("yoga") or {})
+    yoga_name = _dig(yoga_item, "name", "yoga_name", default="")
     translated["yoga"] = YOGA_NAMES.get(yoga_name, yoga_name) or "--"
-    translated["yoga_ends"] = _dig(yoga, "ends_at", "completes_at", default="")
+    translated["yoga_ends"] = _dig(yoga_item, "completion", "ends_at", "completes_at", default="")
  
     # Karan
-    karan = result.get("karana") or {}
-    karan_name = _dig(karan, "name", "karan_name", default="")
-    if isinstance(karan, list) and karan:
-        karan_name = _dig(karan[0], "name", default="")
+    karan_item = _first_indexed_item(result.get("karana") or {})
+    karan_name = _dig(karan_item, "name", "karan_name", default="")
     translated["karan"] = KARAN_NAMES.get(karan_name, karan_name) or "--"
  
-    # Rahu Kaal
+    # Rahu Kaal — confirmed field names: starts_at / ends_at
     rahu = result.get("rahu") or {}
-    r_start = _dig(rahu, "start", "start_time", default="--")
-    r_end   = _dig(rahu, "end", "end_time", default="--")
+    r_start = _dig(rahu, "starts_at", "start_time", "start", default="--")
+    r_end   = _dig(rahu, "ends_at", "end_time", "end", default="--")
     translated["rahu_kaal"] = f"{r_start} - {r_end}"
  
     # Lunar month + Vikram Samvat
