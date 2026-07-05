@@ -183,7 +183,8 @@ DEFAULT_TZ  = 5.5
  
 BASE_URL = "https://json.freeastrologyapi.com"
  
-# ---- Hindi translation tables (unchanged from before) ----
+# ── Hindi translation tables ──────────────────────────────────────────────────
+ 
 TITHI_NAMES = {
     "Pratipada": "प्रतिपदा", "Dwitiya": "द्वितीया", "Tritiya": "तृतीया",
     "Chaturthi": "चतुर्थी", "Panchami": "पंचमी", "Shashthi": "षष्ठी",
@@ -191,8 +192,11 @@ TITHI_NAMES = {
     "Dashami": "दशमी", "Ekadashi": "एकादशी", "Dwadashi": "द्वादशी",
     "Trayodashi": "त्रयोदशी", "Chaturdashi": "चतुर्दशी",
     "Purnima": "पूर्णिमा", "Amavasya": "अमावस्या", "Shashti": "षष्ठी",
-    "Shukla": "शुक्ल", "Krishna": "कृष्ण"
+    "Shukla": "शुक्ल", "Krishna": "कृष्ण",
+    # API spelling variants
+    "Shahshthi": "षष्ठी", "Shashhthi": "षष्ठी",
 }
+ 
 NAKSHATRA_NAMES = {
     "Ashwini": "अश्विनी", "Bharani": "भरणी", "Krittika": "कृत्तिका",
     "Rohini": "रोहिणी", "Mrigashira": "मृगशिरा", "Ardra": "आर्द्रा",
@@ -204,8 +208,28 @@ NAKSHATRA_NAMES = {
     "Uttara Ashadha": "उत्तराषाढ़ा", "Shravana": "श्रवण",
     "Dhanishtha": "धनिष्ठा", "Shatabhisha": "शतभिषा",
     "Purva Bhadrapada": "पूर्व भाद्रपद", "Uttara Bhadrapada": "उत्तर भाद्रपद",
-    "Revati": "रेवती"
+    "Revati": "रेवती",
 }
+ 
+# API returns slightly different spellings — normalize before lookup
+NAKSHATRA_ALIASES = {
+    "Poorvaabhadra":  "Purva Bhadrapada",
+    "Uttarabhadra":   "Uttara Bhadrapada",
+    "Poorvaphalguni": "Purva Phalguni",
+    "Uttaraphalguni": "Uttara Phalguni",
+    "Poorvashadha":   "Purva Ashadha",
+    "Uttarashadha":   "Uttara Ashadha",
+    "Mrigasira":      "Mrigashira",
+    "Chitta":         "Chitra",
+    "Swathi":         "Swati",
+    "Visakha":        "Vishakha",
+    "Jyeshtha":       "Jyeshtha",
+    "Poorvabhadra":   "Purva Bhadrapada",
+    "Uttarabhadra":   "Uttara Bhadrapada",
+    "Dhanistha":      "Dhanishtha",
+    "Sravana":        "Shravana",
+}
+ 
 YOGA_NAMES = {
     "Vishkambha": "विष्कम्भ", "Priti": "प्रीति", "Ayushman": "आयुष्मान",
     "Saubhagya": "सौभाग्य", "Shobhana": "शोभन", "Atiganda": "अतिगण्ड",
@@ -215,19 +239,35 @@ YOGA_NAMES = {
     "Siddhi": "सिद्धि", "Vyatipata": "व्यतीपात", "Variyan": "वरीयान",
     "Parigha": "परिघ", "Shiva": "शिव", "Siddha": "सिद्ध",
     "Sadhya": "साध्य", "Shubha": "शुभ", "Brahma": "ब्रह्म",
-    "Indra": "इन्द्र", "Vaidhriti": "वैधृति"
+    "Indra": "इन्द्र", "Vaidhriti": "वैधृति",
 }
+ 
+# API spelling variants for yoga
+YOGA_ALIASES = {
+    "Soubhaagya": "Saubhagya",
+    "Sobhana":    "Shobhana",
+    "Sukharma":   "Sukarma",
+}
+ 
 KARAN_NAMES = {
     "Bava": "बव", "Balava": "बालव", "Kaulava": "कौलव", "Taitila": "तैतिल",
     "Garaja": "गरज", "Vanija": "वणिज", "Vanij": "वणिज", "Vishti": "विष्टि",
     "Bhadra": "भद्रा", "Shakuni": "शकुनि", "Chatushpada": "चतुष्पाद",
-    "Naga": "नाग", "Kimstughna": "किंस्तुघ्न"
+    "Naga": "नाग", "Kimstughna": "किंस्तुघ्न",
+    # API spelling variants
+    "Garija": "गरज", "Taitula": "तैतिल",
 }
-PAKSHA_NAMES = {"Shukla": "शुक्ल पक्ष", "Krishna": "कृष्ण पक्ष"}
  
-# ---- Simple in-memory daily cache (Ujjain default only) ----
+PAKSHA_NAMES = {
+    "Shukla": "शुक्ल पक्ष",
+    "Krishna": "कृष्ण पक्ष",
+}
+ 
+# ── Simple in-memory daily cache (default Ujjain only) ───────────────────────
 _panchang_cache = {"date_key": None, "payload": None}
  
+ 
+# ── Helpers ───────────────────────────────────────────────────────────────────
  
 def _get_headers():
     api_key = os.environ.get('FREE_ASTRO_API_KEY')
@@ -244,28 +284,72 @@ def _base_payload(now, lat, lng, tz):
  
  
 def _call_endpoint(path, payload, headers, timeout=10):
-    """Call one individual endpoint. Returns (ok, json_or_none, raw_text)."""
+    """
+    Call one API endpoint.
+    Returns (ok: bool, data: dict|None, raw_text: str).
+    Detects rate-limit and deprecation errors at any nesting level.
+    """
     try:
-        resp = requests.post(f"{BASE_URL}/{path}", json=payload,
-                              headers=headers, timeout=timeout)
-        if resp.status_code == 200:
-            data = resp.json()
-            # Detect the same silent-deprecation pattern we hit before
-            if isinstance(data, dict) and "output" in data and \
-               isinstance(data["output"], str) and "deprecat" in data["output"].lower():
-                return False, None, resp.text
-            return True, data, resp.text
-        return False, None, resp.text
+        resp = requests.post(
+            f"{BASE_URL}/{path}", json=payload,
+            headers=headers, timeout=timeout
+        )
+        if resp.status_code != 200:
+            return False, None, f"HTTP {resp.status_code}: {resp.text}"
+ 
+        data = resp.json()
+ 
+        # Unwrap {"statusCode": 200, "output": ...} wrapper if present
+        unwrapped = data
+        if isinstance(data, dict) and "output" in data:
+            unwrapped = data["output"]
+ 
+        # Detect error messages inside output (e.g. "Limit Exceeded")
+        if isinstance(unwrapped, dict) and "message" in unwrapped:
+            msg = unwrapped["message"]
+            return False, None, str(msg)
+ 
+        # Detect plain string errors
+        if isinstance(unwrapped, str):
+            lower = unwrapped.lower()
+            if "deprecat" in lower or "limit" in lower or "error" in lower:
+                return False, None, unwrapped
+ 
+        return True, data, resp.text
+ 
     except Exception as e:
         return False, None, str(e)
  
  
+def _unwrap(data):
+    """Unwrap {"statusCode":..., "output": ...} → output."""
+    if isinstance(data, dict) and "output" in data:
+        return data["output"]
+    return data
+ 
+ 
+def _first_item(d):
+    """
+    Endpoints like tithi/yoga/karana return {"1": {...}, "2": {...}}.
+    The active (current) entry is always "1".
+    If already a flat dict with "name", return as-is.
+    """
+    if not isinstance(d, dict):
+        return {}
+    if "name" in d:
+        return d
+    if "1" in d and isinstance(d["1"], dict):
+        return d["1"]
+    if isinstance(d, list) and d:
+        return d[0]
+    return {}
+ 
+ 
 def _dig(d, *keys, default=None):
-    """Try several possible key names / nested paths, return first hit."""
+    """Try several possible key names; return the first non-empty hit."""
     for k in keys:
         if isinstance(k, tuple):
-            cur = d
-            ok = True
+            cur, ok = d, True
             for part in k:
                 if isinstance(cur, dict) and part in cur:
                     cur = cur[part]
@@ -280,15 +364,22 @@ def _dig(d, *keys, default=None):
     return default
  
  
-def fetch_full_panchang(lat, lng, tz, now, debug_raw):
+# ── Main fetch function ───────────────────────────────────────────────────────
+ 
+def fetch_full_panchang(lat, lng, tz, now, debug_raw=False):
+    """
+    Calls all 9 endpoints with 1-second gaps (free tier limit),
+    parses and translates the results into Hindi.
+    Returns (translated_dict, None) on success, (None, error_dict) on failure.
+    """
     headers, api_key = _get_headers()
     if not api_key:
-        return None, {"success": False, "message": "API key not configured"}
-
-    payload = _base_payload(now, lat, lng, tz)
-    result = {}
+        return None, {"success": False, "message": "FREE_ASTRO_API_KEY not set in environment"}
+ 
+    payload  = _base_payload(now, lat, lng, tz)
+    result   = {}
     raw_dump = {}
-
+ 
     endpoints = {
         "sun":       "getsunriseandset",
         "tithi":     "tithi-durations",
@@ -300,85 +391,89 @@ def fetch_full_panchang(lat, lng, tz, now, debug_raw):
         "samvat":    "samvatinfo",
         "rahu":      "rahu-kalam",
     }
-
+ 
     endpoint_items = list(endpoints.items())
+    errors = {}
+ 
     for i, (key, path) in enumerate(endpoint_items):
         ok, data, raw_text = _call_endpoint(path, payload, headers)
         raw_dump[key] = raw_text
-        if not ok:
-            result[key] = None
+ 
+        if ok:
+            result[key] = _unwrap(data)   # always unwrap at ingest
         else:
-            # Always unwrap statusCode/output wrapper first
-            if isinstance(data, dict) and "output" in data:
-                data = data["output"]
-            result[key] = data
+            result[key] = None
+            errors[key] = raw_text
+ 
+        # Free tier = 1 request/second; skip sleep after the last call
         if i < len(endpoint_items) - 1:
             time.sleep(1.1)
-
+ 
+    # ── If ALL endpoints failed, surface a clean error ────────────────────────
+    all_failed = all(v is None for v in result.values())
+    if all_failed:
+        first_err = next(iter(errors.values()), "Unknown API error")
+        hint = ""
+        if "limit" in first_err.lower():
+            hint = ("Free tier allows limited calls per day. "
+                    "Wait until tomorrow or upgrade your plan.")
+        return None, {
+            "success": False,
+            "message": f"API error: {first_err}",
+            "hint": hint,
+            "errors": errors if debug_raw else None,
+        }
+ 
     translated = {}
-
-    # ── Sunrise / Sunset ──────────────────────────────────────────
+ 
+    # ── Sunrise / Sunset ──────────────────────────────────────────────────────
     sun = result.get("sun") or {}
     translated["sunrise"] = _dig(sun, "sun_rise_time", "sun_rise", "sunrise", default="--")
     translated["sunset"]  = _dig(sun, "sun_set_time",  "sun_set",  "sunset",  default="--")
-
-    # ── Tithi ─────────────────────────────────────────────────────
-    # After unwrap, tithi output = {"1": {name, paksha, ...}, "2": ...}
-    tithi_raw  = result.get("tithi") or {}
-    tithi_item = tithi_raw.get("1", tithi_raw)  # get first active tithi
+ 
+    # ── Tithi ─────────────────────────────────────────────────────────────────
+    # After unwrap: {"1": {name, paksha, completion, ...}, "2": {...}}
+    tithi_item = _first_item(result.get("tithi") or {})
     tithi_name = _dig(tithi_item, "name", "tithi_name", default="")
     paksha     = _dig(tithi_item, "paksha", default="")
     tithi_hi   = TITHI_NAMES.get(tithi_name, tithi_name) or "--"
     paksha_hi  = PAKSHA_NAMES.get(paksha.capitalize() if paksha else "", paksha)
     translated["tithi"]      = f"{paksha_hi} {tithi_hi}".strip() or "--"
-    translated["tithi_ends"] = _dig(tithi_item, "ends_at", "completes_at", "completion", default="")
-
-    # ── Nakshatra ─────────────────────────────────────────────────
-    # After unwrap, nakshatra output = {number, name, starts_at, ...} (flat)
+    translated["tithi_ends"] = _dig(tithi_item, "completion", "ends_at", "completes_at", default="")
+ 
+    # ── Nakshatra ─────────────────────────────────────────────────────────────
+    # After unwrap: flat dict {number, name, starts_at, ends_at, lord, ...}
     nak      = result.get("nakshatra") or {}
     nak_name = _dig(nak, "name", "nakshatra_name", default="")
-    # Normalize spelling differences from API
-    NAKSHATRA_ALIASES = {
-        "Poorvaabhadra": "Purva Bhadrapada",
-        "Uttarabhadra":  "Uttara Bhadrapada",
-        "Poorvaphalguni": "Purva Phalguni",
-        "Uttaraphalguni": "Uttara Phalguni",
-        "Poorvashadha":  "Purva Ashadha",
-        "Uttarashadha":  "Uttara Ashadha",
-        "Soubhaagya":    "Saubhagya",    # yoga alias, but safe here too
-    }
-    nak_normalized = NAKSHATRA_ALIASES.get(nak_name, nak_name)
-    translated["nakshatra"]       = NAKSHATRA_NAMES.get(nak_normalized, nak_name) or "--"
-    translated["nakshatra_lord"]  = _dig(nak, "lord", "nakshatra_lord", default="")
-    translated["nakshatra_ends"]  = _dig(nak, "ends_at", "starts_at", "completion", default="")
-
-    # ── Yoga ──────────────────────────────────────────────────────
-    yoga_raw  = result.get("yoga") or {}
-    yoga_item = yoga_raw.get("1", yoga_raw)
+    nak_norm = NAKSHATRA_ALIASES.get(nak_name, nak_name)
+    translated["nakshatra"]      = NAKSHATRA_NAMES.get(nak_norm, nak_name) or "--"
+    translated["nakshatra_lord"] = _dig(nak, "lord", "nakshatra_lord", default="")
+    translated["nakshatra_ends"] = _dig(nak, "ends_at", "completion", "completes_at", default="")
+ 
+    # ── Yoga ──────────────────────────────────────────────────────────────────
+    # After unwrap: {"1": {number, name, yoga_left_percentage, completion}, "2": {...}}
+    yoga_item = _first_item(result.get("yoga") or {})
     yoga_name = _dig(yoga_item, "name", "yoga_name", default="")
-    # API returns "Soubhaagya" instead of "Saubhagya"
-    YOGA_ALIASES = {
-        "Soubhaagya": "Saubhagya",
-        "Atiganda":   "Atiganda",
-    }
-    yoga_normalized = YOGA_ALIASES.get(yoga_name, yoga_name)
-    translated["yoga"]      = YOGA_NAMES.get(yoga_normalized, yoga_name) or "--"
+    yoga_norm = YOGA_ALIASES.get(yoga_name, yoga_name)
+    translated["yoga"]      = YOGA_NAMES.get(yoga_norm, yoga_name) or "--"
     translated["yoga_ends"] = _dig(yoga_item, "completion", "ends_at", "completes_at", default="")
-
-    # ── Karan ─────────────────────────────────────────────────────
-    karan_raw  = result.get("karana") or {}
-    karan_item = karan_raw.get("1", karan_raw)
+ 
+    # ── Karan ─────────────────────────────────────────────────────────────────
+    # After unwrap: {"1": {number, name, karana_left_percentage, completion}, ...}
+    karan_item = _first_item(result.get("karana") or {})
     karan_name = _dig(karan_item, "name", "karan_name", default="")
     translated["karan"] = KARAN_NAMES.get(karan_name, karan_name) or "--"
-
-    # ── Rahu Kaal ─────────────────────────────────────────────────
+ 
+    # ── Rahu Kaal ─────────────────────────────────────────────────────────────
+    # After unwrap: {starts_at, ends_at}
     rahu    = result.get("rahu") or {}
     r_start = _dig(rahu, "starts_at", "start_time", "start", default="--")
     r_end   = _dig(rahu, "ends_at",   "end_time",   "end",   default="--")
     translated["rahu_kaal"] = f"{r_start} - {r_end}"
-
-    # ── Lunar Month ───────────────────────────────────────────────
-    # API: {lunar_month_number, lunar_month_name, lunar_month_full_name, adhika, nija, kshaya}
+ 
+    # ── Lunar Month ───────────────────────────────────────────────────────────
+    # After unwrap: {lunar_month_number, lunar_month_name, lunar_month_full_name,
+    #                adhika, nija, kshaya}
     lunar = result.get("lunar") or {}
     translated["lunar_month"] = _dig(
         lunar,
@@ -386,87 +481,112 @@ def fetch_full_panchang(lat, lng, tz, now, debug_raw):
         default="--"
     )
     translated["adhika_maas"] = bool(_dig(lunar, "adhika", default=0))
-
-    # ── Vikram Samvat ─────────────────────────────────────────────
-    # API: {status, timestamp, saka_salivahana_name_number, saka_salivahana_year_name,
-    #       saka_salivahana_year_number, vikram_chaitradi_number, vikram_chaitradi_name_number,
-    #       vikram_chaitradi_year_name, vikram_chairadi_year_name}
+ 
+    # ── Vikram Samvat ─────────────────────────────────────────────────────────
+    # After unwrap: {status, timestamp, saka_salivahana_name_number,
+    #                saka_salivahana_year_name, saka_salivahana_year_number,
+    #                vikram_chaitradi_number, vikram_chaitradi_name_number,
+    #                vikram_chaitradi_year_name, vikram_chairadi_year_name}
     samvat = result.get("samvat") or {}
-    vs_year = _dig(
+    translated["vikram_samvat"] = str(_dig(
         samvat,
         "vikram_chaitradi_number",
         "vikram_chaitradi_name_number",
         "vikram_samvat",
         "vikram_samvat_year",
         default="--"
-    )
-    translated["vikram_samvat"] = str(vs_year)
-    translated["samvat_name"]   = _dig(
+    ))
+    translated["samvat_name"] = _dig(
         samvat,
         "vikram_chaitradi_year_name",
-        "vikram_chairadi_year_name",   # typo variant in API
+        "vikram_chairadi_year_name",   # API has a typo variant too
         default=""
     )
-
-    # ── Weekday ───────────────────────────────────────────────────
+ 
+    # ── Weekday ───────────────────────────────────────────────────────────────
+    # After unwrap: {weekday_number, weekday_name, vedic_weekday_number,
+    #                vedic_weekday_name}
     weekday = result.get("weekday") or {}
     translated["weekday"] = _dig(
         weekday,
         "vedic_weekday_name", "weekday_name", "name",
         default="--"
     )
-
+ 
     if debug_raw:
         translated["_raw_debug"] = raw_dump
-
+ 
     return translated, None
+ 
+ 
+# ── Route ─────────────────────────────────────────────────────────────────────
  
 @app.route('/panchang')
 def get_panchang():
-    """Get today's panchang — uses query params lat/lng or defaults to Ujjain (cached daily)."""
+    """
+    Get today's Panchang.
+ 
+    Query params:
+      lat, lng, tz  — location (defaults to Ujjain)
+      debug=1       — include raw API responses in output
+      force=1       — bypass cache and call API fresh (use sparingly!)
+    """
     try:
-        lat = float(request.args.get('lat', DEFAULT_LAT))
-        lng = float(request.args.get('lng', DEFAULT_LNG))
-        tz  = float(request.args.get('tz', DEFAULT_TZ))
+        lat   = float(request.args.get('lat', DEFAULT_LAT))
+        lng   = float(request.args.get('lng', DEFAULT_LNG))
+        tz    = float(request.args.get('tz',  DEFAULT_TZ))
         debug = request.args.get('debug', '') == '1'
+        force = request.args.get('force', '') == '1'
  
-        now = datetime.now(IST)
-        is_default = (lat == DEFAULT_LAT and lng == DEFAULT_LNG)
-        today_key = now.strftime("%Y-%m-%d")
+        now        = datetime.now(IST)
+        is_default = (lat == DEFAULT_LAT and lng == DEFAULT_LNG and tz == DEFAULT_TZ)
+        today_key  = now.strftime("%Y-%m-%d")
  
-        # Serve from cache if this is the default Ujjain request and cache is fresh
-        if is_default and not debug and _panchang_cache["date_key"] == today_key:
-            return jsonify(_panchang_cache["payload"])
+        # ── Serve from cache if valid (saves all 9 API calls) ─────────────────
+        if is_default and not force and _panchang_cache["date_key"] == today_key:
+            cached = dict(_panchang_cache["payload"])
+            if debug:
+                cached["cache_hit"] = True
+            return jsonify(cached)
  
+        # ── Call API ──────────────────────────────────────────────────────────
         translated, err = fetch_full_panchang(lat, lng, tz, now, debug_raw=debug)
-        if err:
-            return jsonify(err), 500
  
-        # Basic sanity check — if core fields are still "--", treat as a failure
-        if translated.get("sunrise", "--") == "--" and translated.get("tithi", "--") in ("--", " --"):
+        if err:
+            # Serve stale cache rather than a blank error if we have one
+            if _panchang_cache["payload"]:
+                stale = dict(_panchang_cache["payload"])
+                stale["stale"]        = True
+                stale["stale_reason"] = err.get("message", "API error")
+                stale["hint"]         = err.get("hint", "")
+                return jsonify(stale)
+            return jsonify(err), 502
+ 
+        # ── Basic sanity check ────────────────────────────────────────────────
+        if (translated.get("sunrise", "--") == "--"
+                and translated.get("tithi", "--") in ("--", " --", "")):
             return jsonify({
                 "success": False,
                 "message": "Panchang data unavailable from provider",
-                "debug": translated.get("_raw_debug") if debug else None
+                "debug":   translated.get("_raw_debug") if debug else None
             }), 502
  
         response_payload = {
-            "success": True,
-            "date": now.strftime("%d %B %Y"),
+            "success":  True,
+            "date":     now.strftime("%d %B %Y"),
             "location": {"lat": lat, "lng": lng, "is_default": is_default},
-            "data": translated
+            "data":     translated,
         }
  
-        # Update cache only for the default Ujjain result
-        if is_default:
+        # ── Update cache (default Ujjain only, not on debug runs) ─────────────
+        if is_default and not debug:
             _panchang_cache["date_key"] = today_key
-            _panchang_cache["payload"] = response_payload
+            _panchang_cache["payload"]  = response_payload
  
         return jsonify(response_payload)
  
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
-
 
 # ═══════════════════════════════════════
 # KUNDALI ROUTES
