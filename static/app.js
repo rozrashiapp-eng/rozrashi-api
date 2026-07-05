@@ -1215,47 +1215,49 @@ function shareImage() {
     small.width = 540;
     small.height = 540;
     small.getContext('2d').drawImage(canvas, 0, 0, 540, 540);
-    const base64 = small.toDataURL('image/jpeg', 0.85).split(',')[1];
 
+    // ✅ For Android WebView
     if (window.Android) {
-        closeGenerator();          // safe to close first for Android
+        const base64 = small.toDataURL('image/jpeg', 0.85).split(',')[1];
+        closeGenerator();
         setTimeout(() => {
             Android.shareImageWithText(
                 base64,
                 '📲 RozRashi App Download करें 👇\nhttps://play.google.com/store/apps/details?id=com.rozrashi.app'
             );
         }, 400);
+        return;
+    }
+
+    // ✅ For web browsers — use text share only (avoids gesture issue)
+    // Image sharing via navigator.share with files breaks user gesture chain
+    const shareText = currentStatusText + APP_LINK;
+
+    if (navigator.share) {
+        // Close generator first then share text
+        closeGenerator();
+        setTimeout(() => {
+            navigator.share({ text: shareText })
+                .catch(err => {
+                    if (err.name !== 'AbortError') {
+                        navigator.clipboard.writeText(shareText)
+                            .then(() => showToast('✅ कॉपी हो गया! WhatsApp पर पेस्ट करें'));
+                    }
+                });
+        }, 300);
     } else {
-        // ✅ Share FIRST, close AFTER — keeps user gesture alive
-        small.toBlob(async (blob) => {
-            const file = new File([blob], 'rozrashi-status.jpg',
-                { type: 'image/jpeg' });
-            try {
-                if (navigator.share && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        files: [file],
-                        text: '📲 RozRashi App Download करें 👇\nhttps://play.google.com/store/apps/details?id=com.rozrashi.app'
-                    });
-                } else {
-                    // Fallback: download the image
-                    const link = document.createElement('a');
-                    link.download = 'rozrashi-status.jpg';
-                    link.href = URL.createObjectURL(blob);
-                    link.click();
-                    showToast('✅ Image Download हो रही है!');
-                }
-            } catch (err) {
-                // User cancelled share or error — just download
-                if (err.name !== 'AbortError') {
-                    const link = document.createElement('a');
-                    link.download = 'rozrashi-status.jpg';
-                    link.href = URL.createObjectURL(blob);
-                    link.click();
-                }
-            } finally {
-                closeGenerator();  // ✅ Close only after share completes
-            }
-        }, 'image/jpeg', 0.85);
+        // Fallback — copy to clipboard
+        closeGenerator();
+        navigator.clipboard.writeText(shareText)
+            .then(() => showToast('✅ कॉपी हो गया! WhatsApp पर पेस्ट करें'))
+            .catch(() => {
+                // Last fallback — download image
+                const link = document.createElement('a');
+                link.download = 'rozrashi-status.jpg';
+                link.href = small.toDataURL('image/jpeg', 0.85);
+                link.click();
+                showToast('✅ Image Download हो रही है!');
+            });
     }
 }
 
