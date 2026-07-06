@@ -526,9 +526,16 @@ def get_panchang():
             "data":     translated,
         }
 
-        if is_default and not debug:
+        core_ok = (
+            translated.get("tithi",     "--") not in ("--", "", " --") and
+            translated.get("nakshatra", "--") not in ("--", "", " --")
+        )
+        if is_default and not debug and core_ok:
             _panchang_cache["date_key"] = today_key
             _panchang_cache["payload"]  = response_payload
+            print("Panchang cached ✅")
+        elif is_default and not debug and not core_ok:
+            print("⚠️ Incomplete panchang data — skipping cache update")
 
         return jsonify(response_payload)
 
@@ -1229,13 +1236,14 @@ def send_chalisa_notification():
 # ════════════════════════════════════════
 
 def warm_panchang_cache():
-    """Pre-fills the panchang cache. Safe to call anytime — skips if already warm."""
+    """Pre-fills the panchang cache. Validates data before caching."""
     try:
         now       = datetime.now(IST)
         today_key = now.strftime("%Y-%m-%d")
         if _panchang_cache["date_key"] == today_key:
             print("Panchang cache already warm ✅")
             return
+
         print("Warming panchang cache...")
         translated, err = fetch_full_panchang(
             DEFAULT_LAT, DEFAULT_LNG, DEFAULT_TZ, now, debug_raw=False
@@ -1243,6 +1251,13 @@ def warm_panchang_cache():
         if err:
             print(f"Panchang cache warm failed: {err}")
             return
+
+        # ✅ Validate before caching — don't cache if core fields are missing
+        if (translated.get("sunrise", "--") == "--" and
+                translated.get("tithi", "--") in ("--", "", " --")):
+            print("⚠️ Panchang data incomplete — not caching bad data")
+            return
+
         _panchang_cache["date_key"] = today_key
         _panchang_cache["payload"]  = {
             "success":  True,
