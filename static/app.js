@@ -48,6 +48,7 @@ function showScreen(screenName, addToHistory = true) {
     if (screenName === 'chalisa') loadChalisaList(document.querySelector('#screen-chalisa .tab-btn'));
     if (screenName === 'aarti') loadAartiList(document.querySelector('#screen-aarti .tab-btn'));
     if (screenName === 'mantra') loadMantraList(document.querySelector('#screen-mantra .tab-btn'));
+    if (screenName === 'stotra') loadStotraList(document.querySelector('#screen-stotra .tab-btn'));
     if (screenName === 'panchang') loadPanchang();
     if (screenName === 'kundali') { /* form is static, no load needed */ }
     previousScreen = screenName;
@@ -623,6 +624,139 @@ async function showMantraDetail(key) {
         container.innerHTML = '<div class="loading">लोड नहीं हो सकी।</div>';
     }
 }
+
+// ===== STOTRA FUNCTIONS =====
+
+async function loadStotraList(btnElement) {
+    document.querySelectorAll('#screen-stotra .tab-btn')
+        .forEach(b => b.classList.remove('active'));
+    if (btnElement) btnElement.classList.add('active');
+
+    const container = document.getElementById('stotra-list');
+    container.innerHTML =
+        '<div class="loading">स्तोत्र लोड हो रही है...</div>';
+
+    try {
+        const res = await fetch(`${API_URL}/stotra/all`);
+        const json = await res.json();
+        container.innerHTML = '';
+
+        json.data.forEach(stotra => {
+            const card = document.createElement('div');
+            card.className = 'rashi-mini-card';
+            card.style.cssText =
+                'text-align:left;padding:14px;margin-bottom:10px;' +
+                'display:flex;align-items:center;gap:12px;';
+            card.innerHTML = `
+                <span style="font-size:32px">
+                    ${stotra.symbol}
+                </span>
+                <div>
+                    <div class="name" style="font-size:15px">
+                        ${stotra.name}
+                    </div>
+                    <div class="english">
+                        ${stotra.god}
+                    </div>
+                    <div style="font-size:11px;color:#FF6B00;
+                                margin-top:3px;">
+                        ${stotra.verse_count} श्लोक
+                    </div>
+                </div>
+            `;
+            card.onclick = () => showStotraDetail(stotra.key);
+            container.appendChild(card);
+        });
+    } catch (err) {
+        container.innerHTML =
+            '<div class="loading">लोड नहीं हो सकी।</div>';
+    }
+}
+
+async function showStotraDetail(key) {
+    document.querySelectorAll('.screen')
+        .forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-stotra-detail')
+        .classList.add('active');
+
+    const content = document.getElementById(
+        'stotra-detail-content');
+    content.innerHTML =
+        '<div class="loading">लोड हो रही है...</div>';
+
+    try {
+        const res = await fetch(`${API_URL}/stotra/${key}`);
+        const json = await res.json();
+        const s = json.data;
+
+        let versesHtml = '';
+        s.verses.forEach(verse => {
+            versesHtml += `
+                <div class="status-card"
+                     style="margin-bottom:14px;">
+                    <div style="font-size:15px;
+                                line-height:1.9;
+                                color:#ffffff;
+                                font-family:'Hind',sans-serif;
+                                white-space:pre-line;
+                                margin-bottom:10px;">
+                        ${verse.text}
+                    </div>
+                    <div style="font-size:13px;
+                                color:#FF6B00;
+                                line-height:1.6;
+                                border-top:1px solid #2a2a4a;
+                                padding-top:8px;">
+                        📖 ${verse.meaning}
+                    </div>
+                    <div class="status-actions"
+                         style="margin-top:10px;">
+                        <button class="btn-copy"
+                            onclick="copyStatus(
+                                \`${verse.text.replace(
+                                    /`/g,"'")}\`)">
+                            📋 कॉपी
+                        </button>
+                        <button class="btn-image"
+                            onclick="openGenerator(
+                                \`${verse.text.replace(
+                                    /`/g,"'")}\`)">
+                            🎨 Image
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+
+        content.innerHTML = `
+            <div class="rashi-detail-card"
+                 style="margin-bottom:16px;">
+                <span class="big-symbol">
+                    ${s.symbol}
+                </span>
+                <h2>${s.name}</h2>
+                <div class="english-name">${s.god}</div>
+                <div class="message">
+                    ✨ ${s.benefit}
+                </div>
+            </div>
+            ${versesHtml}
+        `;
+    } catch (err) {
+        content.innerHTML =
+            '<div class="loading">लोड नहीं हो सकी।</div>';
+    }
+}
+
+function goBackToStotra() {
+    document.querySelectorAll('.screen')
+        .forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-stotra')
+        .classList.add('active');
+}
+
+// Load stotra when screen opens
+const originalShowScreen = showScreen;
 
 // ================================================================
 // ADD THESE FUNCTIONS IN app.js

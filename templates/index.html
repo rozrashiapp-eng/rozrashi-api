@@ -199,18 +199,6 @@
             onclick="loadStatus('bhakti_quotes', this)">
             🙏 भक्ति
         </button>
-        <button class="tab-btn"
-            onclick="loadStatus('mantra_status', this)">
-            🕉️ मंत्र
-        </button>
-        <button class="tab-btn"
-            onclick="loadStatus('festival', this)">
-            🪔 त्योहार
-        </button>
-        <button class="tab-btn"
-            onclick="loadStatus('stotra', this)">
-            📿 स्तोत्र
-        </button>
     </div>
     <div id="status-list">
         <div class="loading">स्टेटस लोड हो रही है...</div>
@@ -328,6 +316,31 @@
     </div>
     <div id="mantra-list">
         <div class="loading">मंत्र लोड हो रही है...</div>
+    </div>
+</div>
+
+<!-- ===== STOTRA SCREEN ===== -->
+<div class="screen" id="screen-stotra">
+    <div class="section-title">📿 स्तोत्र संग्रह</div>
+    <div class="category-tabs">
+        <button class="tab-btn active"
+                onclick="loadStotraList(this)">
+            📋 सभी स्तोत्र
+        </button>
+    </div>
+    <div id="stotra-list">
+        <div class="loading">स्तोत्र लोड हो रही है...</div>
+    </div>
+</div>
+
+<!-- ===== STOTRA DETAIL SCREEN ===== -->
+<div class="screen" id="screen-stotra-detail">
+    <button class="back-btn"
+            onclick="goBackToStotra()">
+        ← वापस जाएं
+    </button>
+    <div id="stotra-detail-content">
+        <div class="loading">लोड हो रही है...</div>
     </div>
 </div>
 
