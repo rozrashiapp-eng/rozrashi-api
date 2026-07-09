@@ -493,7 +493,7 @@ def get_panchang():
         today_key  = now.strftime("%Y-%m-%d")
 
         # Serve from cache if valid
-        if is_default and not force and _panchang_cache["date_key"] == today_key:
+        if is_default and not force and not debug and _panchang_cache["date_key"] == today_key:
             cached = dict(_panchang_cache["payload"])
             if debug:
                 cached["cache_hit"] = True
@@ -1252,9 +1252,12 @@ def warm_panchang_cache():
             print(f"Panchang cache warm failed: {err}")
             return
 
-        # ✅ Validate before caching — don't cache if core fields are missing
-        if (translated.get("sunrise", "--") == "--" and
-                translated.get("tithi", "--") in ("--", "", " --")):
+        # ✅ Validate before caching — must have both tithi AND nakshatra, not just sunrise
+        core_ok = (
+            translated.get("tithi", "--") not in ("--", "", " --") and
+            translated.get("nakshatra", "--") not in ("--", "", " --")
+        )
+        if not core_ok:
             print("⚠️ Panchang data incomplete — not caching bad data")
             return
 
