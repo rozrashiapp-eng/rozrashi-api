@@ -755,9 +755,6 @@ function goBackToStotra() {
         .classList.add('active');
 }
 
-// Load stotra when screen opens
-const originalShowScreen = showScreen;
-
 // ================================================================
 // ADD THESE FUNCTIONS IN app.js
 // Place them BEFORE the "// ===== INIT APP =====" line
