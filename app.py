@@ -8,6 +8,7 @@ from tithi_data import get_today_tithi
 from stotra_data import STOTRA_DATA, get_all_stotras, get_stotra
 from festivals_data import get_today_festival
 from datetime import datetime, timedelta
+import json as _json
 import pytz
 IST = pytz.timezone('Asia/Kolkata')
 import os
@@ -328,7 +329,13 @@ def _call_endpoint(path, payload, headers, timeout=10):
 
 def _unwrap(data):
     if isinstance(data, dict) and "output" in data:
-        return data["output"]
+        inner = data["output"]
+        if isinstance(inner, str):
+            try:
+                return _json.loads(inner)
+            except Exception:
+                return inner
+        return inner
     return data
 
 
