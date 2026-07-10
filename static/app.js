@@ -696,7 +696,7 @@ async function showStotraDetail(key) {
                      style="margin-bottom:14px;">
                     <div style="font-size:15px;
                                 line-height:1.9;
-                                color:#FF6B00;
+                                color:#FFD200;
                                 font-family:'Hind',sans-serif;
                                 white-space:pre-line;
                                 margin-bottom:10px;">
