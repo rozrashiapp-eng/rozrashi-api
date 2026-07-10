@@ -328,15 +328,22 @@ def _call_endpoint(path, payload, headers, timeout=10):
 
 
 def _unwrap(data):
+    def _try_parse(x):
+        if isinstance(x, str):
+            s = x.strip()
+            if s.startswith("{") or s.startswith("["):
+                try:
+                    return _try_parse(_json.loads(s))
+                except Exception:
+                    return x
+            return x
+        if isinstance(x, dict):
+            return {k: _try_parse(v) for k, v in x.items()}
+        return x
+
     if isinstance(data, dict) and "output" in data:
-        inner = data["output"]
-        if isinstance(inner, str):
-            try:
-                return _json.loads(inner)
-            except Exception:
-                return inner
-        return inner
-    return data
+        return _try_parse(data["output"])
+    return _try_parse(data)
 
 
 def _first_item(d):
@@ -344,8 +351,15 @@ def _first_item(d):
         return {}
     if "name" in d:
         return d
-    if "1" in d and isinstance(d["1"], dict):
-        return d["1"]
+    if "1" in d:
+        item = d["1"]
+        if isinstance(item, str):
+            try:
+                item = _json.loads(item)
+            except Exception:
+                return {}
+        if isinstance(item, dict):
+            return item
     if isinstance(d, list) and d:
         return d[0]
     return {}
