@@ -193,6 +193,25 @@ def get_stotra_route(key):
         "message": "Stotra not found"
     }), 404
 
+@app.route('/status/daily')
+def get_daily_status():
+    from datetime import datetime
+
+    # Combine all categories into one pool
+    all_statuses = []
+    for category, items in STATUS_DATA.items():
+        all_statuses.extend(items)
+
+    # Pick based on day of year (rotates automatically)
+    day_of_year = datetime.now().timetuple().tm_yday
+    index = day_of_year % len(all_statuses)
+
+    return jsonify({
+        "success": True,
+        "data": all_statuses[index],
+        "total": len(all_statuses)
+    })
+
 # ═══════════════════════════════════════
 # PANCHANG ROUTES
 # ═══════════════════════════════════════
