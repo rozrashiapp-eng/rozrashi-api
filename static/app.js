@@ -696,7 +696,7 @@ async function showStotraDetail(key) {
                      style="margin-bottom:14px;">
                     <div style="font-size:15px;
                                 line-height:1.9;
-                                color:#ffffff;
+                                color:#FF6B00;
                                 font-family:'Hind',sans-serif;
                                 white-space:pre-line;
                                 margin-bottom:10px;">
@@ -751,6 +751,8 @@ async function showStotraDetail(key) {
 function goBackToStotra() {
     document.querySelectorAll('.screen')
         .forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn')
+        .forEach(b => b.classList.remove('active'));
     document.getElementById('screen-stotra')
         .classList.add('active');
 }
