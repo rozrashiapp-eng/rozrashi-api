@@ -531,6 +531,13 @@ def fetch_full_panchang(lat, lng, tz, now, debug_raw=False):
 
     if debug_raw:
         translated["_raw_debug"] = raw_dump
+        translated["_parsed_types"] = {
+            k: {
+                "type": type(v).__name__,
+                "preview": (str(v)[:200] if v is not None else None)
+            }
+            for k, v in result.items()
+        }
 
     return translated, None
 
