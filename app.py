@@ -24,26 +24,33 @@ CORS(app)
 # CHALISA ROUTES
 # ═══════════════════════════════════════
 
-DAILY_CHALISA = {
-    0: "shiv",      # Monday
-    1: "hanuman",   # Tuesday
-    2: "ganesh",    # Wednesday
-    3: "laxmi",     # Thursday
-    4: "durga",     # Friday
-    5: "shani",     # Saturday
-    6: "surya",     # Sunday
+DAILY_CHALISA_ROTATION = {
+    0: ["shiv", "parvati", "ganga", "narmada"],        # Monday
+    1: ["hanuman", "ram", "bajrang", "narsingh"],       # Tuesday
+    2: ["ganesh", "saraswati", "budh"],                 # Wednesday
+    3: ["vishnu", "krishna", "laxmi", "guru"],          # Thursday
+    4: ["durga", "laxmi", "kali", "santoshi",
+        "vaishno", "saraswati", "radha", "sita"],       # Friday
+    5: ["shani", "bhairav", "kali", "yamraj"],          # Saturday
+    6: ["surya", "ram", "aaditya"],                     # Sunday
 }
 
 @app.route('/chalisa/today')
 def get_today_chalisa():
-    day = datetime.now(IST).weekday()
-    key = DAILY_CHALISA[day]
-    chalisa = CHALISA_DATA.get(key)
+    now        = datetime.now(IST)
+    day        = now.weekday()           # 0=Mon ... 6=Sun
+    week_no    = now.isocalendar()[1]    # week number of year
+    
+    rotation   = DAILY_CHALISA_ROTATION[day]
+    key        = rotation[week_no % len(rotation)]
+    chalisa    = CHALISA_DATA.get(key)
+    
     return jsonify({
-        "success": True,
+        "success":   True,
         "day_index": day,
-        "key": key,
-        "data": chalisa
+        "week":      week_no,
+        "key":       key,
+        "data":      chalisa
     })
 
 @app.route('/chalisa/all')
@@ -614,10 +621,11 @@ def get_panchang():
             "data":     translated,
         }
 
-        core_ok = (
-            translated.get("tithi",     "--") not in ("--", "", " --") and
-            translated.get("nakshatra", "--") not in ("--", "", " --")
-        )
+        core_ok = all(
+            translated.get(f, "--") not in ("--", "", " --")
+            for f in ("tithi", "nakshatra", "yoga", "karan", "lunar_month", "vikram_samvat")
+        ) and translated.get("rahu_kaal", "-- - --") != "-- - --"
+
         if is_default and not debug and core_ok:
             _panchang_cache["date_key"] = today_key
             _panchang_cache["payload"]  = response_payload
@@ -1123,10 +1131,11 @@ def warm_panchang_cache():
             return
 
         # ✅ Validate before caching — must have both tithi AND nakshatra, not just sunrise
-        core_ok = (
-            translated.get("tithi", "--") not in ("--", "", " --") and
-            translated.get("nakshatra", "--") not in ("--", "", " --")
-        )
+        core_ok = all(
+            translated.get(f, "--") not in ("--", "", " --")
+            for f in ("tithi", "nakshatra", "yoga", "karan", "lunar_month", "vikram_samvat")
+        ) and translated.get("rahu_kaal", "-- - --") != "-- - --"
+
         if not core_ok:
             print("⚠️ Panchang data incomplete — not caching bad data")
             return
