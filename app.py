@@ -348,16 +348,32 @@ def _call_endpoint(path, payload, headers, timeout=10):
 
 def _unwrap(data):
     def _try_parse(x):
-        if isinstance(x, str):
-            s = x.strip()
-            if s.startswith("{") or s.startswith("["):
-                try:
-                    return _try_parse(_json.loads(s))
-                except Exception:
-                    return x
-            return x
         if isinstance(x, dict):
             return {k: _try_parse(v) for k, v in x.items()}
+        if not isinstance(x, str):
+            return x
+
+        s = x.strip()
+        if not s:
+            return x
+
+        # Attempt 1: parse directly (handles normal, correctly-quoted JSON)
+        if s[0] in "{[":
+            try:
+                return _try_parse(_json.loads(s))
+            except Exception:
+                pass
+
+        # Attempt 2: string is JSON content with escaped quotes but missing
+        # its own surrounding quotes (e.g. `{\"number\": 28, ...}`).
+        # Wrapping it in real quotes lets json.loads un-escape it properly.
+        try:
+            unescaped = _json.loads('"' + s + '"')
+            if isinstance(unescaped, str) and unescaped != s:
+                return _try_parse(unescaped)
+        except Exception:
+            pass
+
         return x
 
     if isinstance(data, dict) and "output" in data:
