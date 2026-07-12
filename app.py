@@ -357,16 +357,19 @@ def _unwrap(data):
         if not s:
             return x
 
-        # Attempt 1: parse directly (handles normal, correctly-quoted JSON)
-        if s[0] in "{[":
-            try:
-                return _try_parse(_json.loads(s))
-            except Exception:
-                pass
+        # Attempt 1: parse directly. This handles BOTH plain JSON
+        # ({"a":1}) AND an already-quoted JSON-string-of-a-string
+        # ("{\"a\":1}") — json.loads unescapes either correctly.
+        try:
+            parsed = _json.loads(s)
+            if parsed != s:
+                return _try_parse(parsed)
+            return parsed
+        except Exception:
+            pass
 
-        # Attempt 2: string is JSON content with escaped quotes but missing
-        # its own surrounding quotes (e.g. `{\"number\": 28, ...}`).
-        # Wrapping it in real quotes lets json.loads un-escape it properly.
+        # Attempt 2 (fallback): string has escaped quotes but is
+        # missing its own outer quotes (e.g. `{\"a\":1}` with no "" around it).
         try:
             unescaped = _json.loads('"' + s + '"')
             if isinstance(unescaped, str) and unescaped != s:
