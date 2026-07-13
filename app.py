@@ -817,8 +817,8 @@ def get_kundali():
             headers=headers, timeout=15
         )
 
-print(f"Kundali API status: {kundali_response.status_code}")
-print(f"Kundali API response: {kundali_response.text[:1000]}")
+        print(f"Kundali API status: {kundali_response.status_code}")
+        print(f"Kundali API response: {kundali_response.text[:1000]}")
 
         planet_response = requests.get(
             "https://api.prokerala.com/v2/astrology/planet-position",
