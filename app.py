@@ -20,63 +20,106 @@ app = Flask(__name__)
 app.json.ensure_ascii = False
 CORS(app)
 
-# ═══════════════════════════════════════
-# CHALISA ROUTES
-# ═══════════════════════════════════════
-
+# ===== DAY WISE CHALISA ROTATION =====
 DAILY_CHALISA_ROTATION = {
-    0: ["shiv", "parvati", "ganga", "narmada"],        # Monday
-    1: ["hanuman", "ram", "bajrang", "narsingh"],       # Tuesday
-    2: ["ganesh", "saraswati", "budh"],                 # Wednesday
-    3: ["vishnu", "krishna", "laxmi", "guru"],          # Thursday
+    0: ["shiv", "parvati", "ganga", "narmada"],
+    # Monday — Shiv family
+
+    1: ["hanuman", "bajrang", "narsingh", "kartikeya", "ram"],
+    # Tuesday — Hanuman/Mangal/Shakti
+
+    2: ["ganesh", "saraswati", "krishna"],
+    # Wednesday — Ganesh/Budh/Wisdom
+
+    3: ["vishnu", "krishna", "guru", "vaishno"],
+    # Thursday — Vishnu/Guru family
+
     4: ["durga", "laxmi", "kali", "santoshi",
-        "vaishno", "saraswati", "radha", "sita"],       # Friday
-    5: ["shani", "bhairav", "kali", "yamraj"],          # Saturday
-    6: ["surya", "ram", "aaditya"],                     # Sunday
+        "vaishno", "saraswati", "radha", "sita"],
+    # Friday — Devi/Shakti/Lakshmi
+
+    5: ["shani", "bhairav", "kali", "yamraj"],
+    # Saturday — Shani/Bhairav
+
+    6: ["surya", "ram", "vishnu"]
+    # Sunday — Surya/Ram
 }
+
 
 @app.route('/chalisa/today')
 def get_today_chalisa():
-    now        = datetime.now(IST)
-    day        = now.weekday()           # 0=Mon ... 6=Sun
-    week_no    = now.isocalendar()[1]    # week number of year
-    
-    rotation   = DAILY_CHALISA_ROTATION[day]
-    key        = rotation[week_no % len(rotation)]
-    chalisa    = CHALISA_DATA.get(key)
-    
-    return jsonify({
-        "success":   True,
-        "day_index": day,
-        "week":      week_no,
-        "key":       key,
-        "data":      chalisa
-    })
+    try:
+        now      = datetime.now(IST)
+        day      = now.weekday()          # 0=Mon ... 6=Sun
+        week_no  = now.isocalendar()[1]   # week number of year
+
+        rotation = DAILY_CHALISA_ROTATION[day]
+        key      = rotation[week_no % len(rotation)]
+        chalisa  = CHALISA_DATA.get(key)
+
+        if not chalisa:
+            return jsonify({
+                "success": False,
+                "message": "Chalisa not found"
+            }), 404
+
+        return jsonify({
+            "success":   True,
+            "day_index": day,
+            "week":      week_no,
+            "key":       key,
+            "data":      chalisa
+        })
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
 
 @app.route('/chalisa/all')
-def get_all_chalisas():
-    result = []
-    for key, value in CHALISA_DATA.items():
-        result.append({
-            "key": key,
-            "name": value["name"],
-            "god": value["god"],
-            "day": value["day"],
-            "symbol": value["symbol"],
-            "benefit": value["benefit"],
-            "verse_count": len(value["verses"])
+def get_all_chalisa():
+    try:
+        result = []
+        for key, value in CHALISA_DATA.items():
+            result.append({
+                "key":     key,
+                "name":    value.get("name", ""),
+                "god":     value.get("god", ""),
+                "day":     value.get("day", ""),
+                "symbol":  value.get("symbol", ""),
+                "benefit": value.get("benefit", "")
+            })
+        return jsonify({
+            "success": True,
+            "data":    result
         })
-    return jsonify({"success": True, "data": result})
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
 
-@app.route('/chalisa/<name>')
-def get_chalisa(name):
-    chalisa = CHALISA_DATA.get(name)
-    if chalisa:
-        return jsonify({"success": True, "data": chalisa})
-    return jsonify({
-        "success": False,
-        "message": "Chalisa not found"
-    }), 404
+
+@app.route('/chalisa/<key>')
+def get_single_chalisa(key):
+    try:
+        if key in CHALISA_DATA:
+            return jsonify({
+                "success": True,
+                "key":     key,
+                "data":    CHALISA_DATA[key]
+            })
+        return jsonify({
+            "success": False,
+            "message": "Chalisa not found"
+        }), 404
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
 
 # ═══════════════════════════════════════
 # AARTI ROUTES

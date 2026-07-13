@@ -1,0 +1,315 @@
+// ═══════════════════════════════════════════════════════
+// ROZRASHI — MULTILINGUAL CONFIG
+// Languages: Hindi (hi) + Marathi (mr)
+// Auto-detect from browser/phone language
+// ═══════════════════════════════════════════════════════
+
+const LANG_UI = {
+    hi: {
+        // Header
+        app_name: "रोज़राशि",
+        today: "आज",
+
+        // Welcome
+        welcome_title: "🙏 नमस्ते!",
+        welcome_sub: "अपनी राशि चुनें और आज का राशिफल देखें",
+
+        // Section titles
+        select_rashi: "⭐ अपनी राशि चुनें",
+        todays_status: "💬 आज का स्टेटस",
+        all_rashis: "🔮 सभी राशियाँ",
+
+        // Buttons
+        back_btn: "← वापस जाएं",
+        whatsapp_share: "📱 WhatsApp पर शेयर करें",
+        copy_btn: "📋 कॉपी करें",
+        image_btn: "🎨 Image बनाएं",
+        download_btn: "⬇️ Download",
+        see_all_status: "✨ सभी भक्ति Status देखें",
+
+        // Lucky info
+        lucky_number: "लकी नंबर",
+        lucky_color: "लकी रंग",
+        lucky_time: "शुभ समय",
+        todays_tip: "आज का सुझाव",
+
+        // Status tabs
+        tab_good_morning: "🌅 गुड मॉर्निंग",
+        tab_bhakti: "🙏 भक्ति",
+
+        // Nav
+        nav_home: "होम",
+        nav_rashifal: "राशिफल",
+        nav_status: "स्टेटस",
+        nav_panchang: "पंचांग",
+        nav_kundali: "कुंडली",
+
+        // Loading
+        loading_rashi: "राशि लोड हो रही है...",
+        loading_status: "स्टेटस लोड हो रही है...",
+        loading_general: "लोड हो रही है...",
+        error_internet: "इंटरनेट कनेक्शन चेक करें",
+
+        // Rashi detail
+        share_text: "आज का राशिफल",
+        copy_success: "✅ कॉपी हो गया!",
+
+        // Image status
+        image_title: "🎨 Image Status बनाएं",
+        theme_label: "🎨 थीम चुनें",
+        preview_label: "👁️ Preview",
+
+        // Days
+        days: ["रविवार", "सोमवार", "मंगलवार", "बुधवार", "गुरुवार", "शुक्रवार", "शनिवार"],
+        months: ["जनवरी", "फ़रवरी", "मार्च", "अप्रैल", "मई", "जून",
+                 "जुलाई", "अगस्त", "सितंबर", "अक्टूबर", "नवंबर", "दिसंबर"],
+
+        // Watermark
+        watermark_line1: "📲 RozRashi App से",
+        watermark_line2: "👉 bit.ly/rozrashi",
+    },
+
+    mr: {
+        // Header
+        app_name: "रोज़राशी",
+        today: "आज",
+
+        // Welcome
+        welcome_title: "🙏 नमस्कार!",
+        welcome_sub: "तुमची रास निवडा आणि आजचे राशीभविष्य पाहा",
+
+        // Section titles
+        select_rashi: "⭐ तुमची रास निवडा",
+        todays_status: "💬 आजचा स्टेटस",
+        all_rashis: "🔮 सर्व राशी",
+
+        // Buttons
+        back_btn: "← मागे जा",
+        whatsapp_share: "📱 WhatsApp वर शेअर करा",
+        copy_btn: "📋 कॉपी करा",
+        image_btn: "🎨 Image बनवा",
+        download_btn: "⬇️ Download",
+        see_all_status: "✨ सर्व भक्ती Status पाहा",
+
+        // Lucky info
+        lucky_number: "लकी नंबर",
+        lucky_color: "लकी रंग",
+        lucky_time: "शुभ वेळ",
+        todays_tip: "आजचा सल्ला",
+
+        // Status tabs
+        tab_good_morning: "🌅 सुप्रभात",
+        tab_bhakti: "🙏 भक्ती",
+
+        // Nav
+        nav_home: "होम",
+        nav_rashifal: "राशीभविष्य",
+        nav_status: "स्टेटस",
+        nav_panchang: "पंचांग",
+        nav_kundali: "कुंडली",
+
+        // Loading
+        loading_rashi: "राशी लोड होत आहे...",
+        loading_status: "स्टेटस लोड होत आहे...",
+        loading_general: "लोड होत आहे...",
+        error_internet: "इंटरनेट कनेक्शन तपासा",
+
+        // Rashi detail
+        share_text: "आजचे राशीभविष्य",
+        copy_success: "✅ कॉपी झाले!",
+
+        // Image status
+        image_title: "🎨 Image Status बनवा",
+        theme_label: "🎨 थीम निवडा",
+        preview_label: "👁️ Preview",
+
+        // Days
+        days: ["रविवार", "सोमवार", "मंगळवार", "बुधवार", "गुरुवार", "शुक्रवार", "शनिवार"],
+        months: ["जानेवारी", "फेब्रुवारी", "मार्च", "एप्रिल", "मे", "जून",
+                 "जुलै", "ऑगस्ट", "सप्टेंबर", "ऑक्टोबर", "नोव्हेंबर", "डिसेंबर"],
+
+        // Watermark
+        watermark_line1: "📲 RozRashi App वरून",
+        watermark_line2: "👉 bit.ly/rozrashi",
+    }
+};
+
+// ═══════════════════════════════════════
+// RASHI NAMES IN BOTH LANGUAGES
+// ═══════════════════════════════════════
+
+const RASHI_NAMES = {
+    hi: {
+        1:  { name: "मेष",     english: "Aries",       symbol: "♈" },
+        2:  { name: "वृषभ",   english: "Taurus",      symbol: "♉" },
+        3:  { name: "मिथुन",  english: "Gemini",      symbol: "♊" },
+        4:  { name: "कर्क",   english: "Cancer",      symbol: "♋" },
+        5:  { name: "सिंह",   english: "Leo",         symbol: "♌" },
+        6:  { name: "कन्या",  english: "Virgo",       symbol: "♍" },
+        7:  { name: "तुला",   english: "Libra",       symbol: "♎" },
+        8:  { name: "वृश्चिक","english": "Scorpio",   symbol: "♏" },
+        9:  { name: "धनु",    english: "Sagittarius", symbol: "♐" },
+        10: { name: "मकर",    english: "Capricorn",   symbol: "♑" },
+        11: { name: "कुंभ",   english: "Aquarius",    symbol: "♒" },
+        12: { name: "मीन",    english: "Pisces",      symbol: "♓" },
+    },
+    mr: {
+        1:  { name: "मेष",     english: "Aries",       symbol: "♈" },
+        2:  { name: "वृषभ",   english: "Taurus",      symbol: "♉" },
+        3:  { name: "मिथुन",  english: "Gemini",      symbol: "♊" },
+        4:  { name: "कर्क",   english: "Cancer",      symbol: "♋" },
+        5:  { name: "सिंह",   english: "Leo",         symbol: "♌" },
+        6:  { name: "कन्या",  english: "Virgo",       symbol: "♍" },
+        7:  { name: "तूळ",    english: "Libra",       symbol: "♎" },
+        8:  { name: "वृश्चिक","english": "Scorpio",   symbol: "♏" },
+        9:  { name: "धनु",    english: "Sagittarius", symbol: "♐" },
+        10: { name: "मकर",    english: "Capricorn",   symbol: "♑" },
+        11: { name: "कुंभ",   english: "Aquarius",    symbol: "♒" },
+        12: { name: "मीन",    english: "Pisces",      symbol: "♓" },
+    }
+};
+
+// ═══════════════════════════════════════
+// STATUS CONTENT IN MARATHI
+// (Hindi already exists in app.py)
+// ═══════════════════════════════════════
+
+const STATUS_MARATHI = {
+    good_morning: [
+        "सुप्रभात! तुमचा दिवस मंगलमय होवो 🌞",
+        "प्रत्येक सकाळ नवी सुरुवात असते — ती वाया घालवू नका 💫",
+        "आनंदी राहा, हसत राहा, जीवन खूप सुंदर आहे 😊",
+        "उठा, जागा व्हा आणि तुमच्या स्वप्नांकडे वाटचाल करा 🌅",
+        "आजचा दिवस फक्त तुमचा आहे — तो खास बनवा ✨",
+        "सकाळी उठून देवाचे नाव घ्या — दिवस चांगला जाईल 🙏",
+        "नवा दिवस, नवी उमेद, नवा उत्साह 🌟",
+    ],
+    bhakti: [
+        "जो राम का नाम जपतो, त्याला कुणाचीही भीती नाही 🙏",
+        "भगवंताचे स्मरण हेच खरे सुख आहे ॐ",
+        "श्रद्धा आणि भक्तीने देव प्रसन्न होतो 🪷",
+        "हर हर महादेव! शिवाची कृपा सदा असो 🔱",
+        "गणपती बाप्पा मोरया! सर्व संकटे दूर होवोत 🐘",
+        "जय श्री कृष्ण! कृष्णाचे नाव जपा, सुख मिळेल 🦚",
+        "माँ दुर्गेची कृपा सदा आपल्यावर असो 🌺",
+        "राम नाम जपत राहा — मोक्ष मिळेल 🏹",
+        "हनुमानाची भक्ती करा — सर्व अडचणी दूर होतील 🌟",
+        "विष्णूचे स्मरण करा — जीवनात शांती येईल 🪷",
+    ]
+};
+
+// ═══════════════════════════════════════
+// AUTO LANGUAGE DETECTION
+// ═══════════════════════════════════════
+
+function detectLanguage() {
+    // 1. Check saved preference first
+    const saved = localStorage.getItem('rozrashi_lang');
+    if (saved && ['hi', 'mr'].includes(saved)) return saved;
+
+    // 2. Check browser language
+    const browserLang = navigator.language || navigator.userLanguage || 'hi';
+
+    if (browserLang.startsWith('mr')) return 'mr';
+    if (browserLang.startsWith('hi')) return 'hi';
+
+    // 3. Default to Hindi
+    return 'hi';
+}
+
+// ═══════════════════════════════════════
+// LANGUAGE MANAGER
+// ═══════════════════════════════════════
+
+let currentLang = detectLanguage();
+
+function setLanguage(lang) {
+    currentLang = lang;
+    localStorage.setItem('rozrashi_lang', lang);
+    updateLanguageButtons();
+    updateAllUI();
+    loadRashiGrid('rashi-grid');
+    loadHomeStatusPreview();
+}
+
+function L(key) {
+    return LANG_UI[currentLang][key] || LANG_UI['hi'][key] || key;
+}
+
+function getRashiName(id) {
+    return RASHI_NAMES[currentLang][id] || RASHI_NAMES['hi'][id];
+}
+
+function updateLanguageButtons() {
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    const activeBtn = document.getElementById('lang-' + currentLang);
+    if (activeBtn) activeBtn.classList.add('active');
+}
+
+function updateAllUI() {
+    // Header date
+    updateHeaderDate();
+
+    // Welcome card
+    const welcomeTitle = document.getElementById('welcome-title');
+    const welcomeSub = document.getElementById('welcome-sub');
+    if (welcomeTitle) welcomeTitle.textContent = L('welcome_title');
+    if (welcomeSub) welcomeSub.textContent = L('welcome_sub');
+
+    // Section titles
+    const selectRashiTitle = document.getElementById('select-rashi-title');
+    const todaysStatusTitle = document.getElementById('todays-status-title');
+    if (selectRashiTitle) selectRashiTitle.textContent = L('select_rashi');
+    if (todaysStatusTitle) todaysStatusTitle.textContent = L('todays_status');
+
+    // Nav labels
+    const navLabels = {
+        'nav-label-home': L('nav_home'),
+        'nav-label-rashifal': L('nav_rashifal'),
+        'nav-label-status': L('nav_status'),
+        'nav-label-panchang': L('nav_panchang'),
+        'nav-label-kundali': L('nav_kundali'),
+    };
+    Object.entries(navLabels).forEach(([id, text]) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
+    });
+
+    // Status tabs
+    const tabGoodMorning = document.getElementById('tab-good-morning');
+    const tabBhakti = document.getElementById('tab-bhakti');
+    if (tabGoodMorning) tabGoodMorning.innerHTML = L('tab_good_morning');
+    if (tabBhakti) tabBhakti.innerHTML = L('tab_bhakti');
+
+    // Loading texts
+    document.querySelectorAll('.loading').forEach(el => {
+        if (el.dataset.type === 'rashi') el.textContent = L('loading_rashi');
+        else if (el.dataset.type === 'status') el.textContent = L('loading_status');
+        else el.textContent = L('loading_general');
+    });
+}
+
+function updateHeaderDate() {
+    const now = new Date();
+    const dayName = L('days')[now.getDay()];
+    const monthName = L('months')[now.getMonth()];
+    const dateStr = `${dayName}, ${now.getDate()} ${monthName}`;
+    const dateEl = document.getElementById('today-date');
+    if (dateEl) dateEl.textContent = dateStr;
+}
+
+function getStatusContent(category) {
+    if (currentLang === 'mr') {
+        return STATUS_MARATHI[category] || [];
+    }
+    // Hindi content comes from API (app.py)
+    return null; // will use API
+}
+
+// Initialize language on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateLanguageButtons();
+    updateAllUI();
+});
