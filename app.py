@@ -286,6 +286,12 @@ TITHI_NAMES = {
     "Shahshthi": "षष्ठी", "Shashhthi": "षष्ठी",
 }
 
+TITHI_ALIASES = {
+    "Amawasya": "Amavasya",
+    "Poornima": "Purnima",
+    "Chaturdasi": "Chaturdashi",
+}
+
 NAKSHATRA_NAMES = {
     "Ashwini": "अश्विनी", "Bharani": "भरणी", "Krittika": "कृत्तिका",
     "Rohini": "रोहिणी", "Mrigashira": "मृगशिरा", "Ardra": "आर्द्रा",
@@ -314,6 +320,7 @@ NAKSHATRA_ALIASES = {
     "Poorvabhadra":   "Purva Bhadrapada",
     "Dhanistha":      "Dhanishtha",
     "Sravana":        "Shravana",
+    "Aardra":         "Ardra",
 }
 
 YOGA_NAMES = {
@@ -332,6 +339,7 @@ YOGA_ALIASES = {
     "Soubhaagya": "Saubhagya",
     "Sobhana":    "Shobhana",
     "Sukharma":   "Sukarma",
+    "Vyaghaata":  "Vyaghata",
 }
 
 KARAN_NAMES = {
@@ -340,6 +348,10 @@ KARAN_NAMES = {
     "Bhadra": "भद्रा", "Shakuni": "शकुनि", "Chatushpada": "चतुष्पाद",
     "Naga": "नाग", "Kimstughna": "किंस्तुघ्न",
     "Garija": "गरज", "Taitula": "तैतिल",
+}
+
+KARAN_ALIASES = {
+    "Chatushapada": "Chatushpada",
 }
 
 PAKSHA_NAMES = {
@@ -470,6 +482,19 @@ def _dig(d, *keys, default=None):
                 return d[k]
     return default
 
+def _format_time(dt_str, with_seconds=False):
+    """Extracts just HH:MM (or HH:MM:SS) from a 'YYYY-MM-DD HH:MM:SS[.ffffff]' string."""
+    if not dt_str or dt_str == "--":
+        return "--"
+    try:
+        if "." in dt_str:
+            dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M:%S.%f")
+        else:
+            dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M:%S")
+        return dt.strftime("%H:%M:%S") if with_seconds else dt.strftime("%H:%M")
+    except Exception:
+        return dt_str  # fall back to original text if parsing fails
+
 
 def fetch_full_panchang(lat, lng, tz, now, debug_raw=False):
     headers, api_key = _get_headers()
@@ -533,10 +558,11 @@ def fetch_full_panchang(lat, lng, tz, now, debug_raw=False):
     tithi_item = _first_item(result.get("tithi") or {})
     tithi_name = _dig(tithi_item, "name", "tithi_name", default="")
     paksha     = _dig(tithi_item, "paksha", default="")
-    tithi_hi   = TITHI_NAMES.get(tithi_name, tithi_name) or "--"
+    tithi_norm = TITHI_ALIASES.get(tithi_name, tithi_name)
+    tithi_hi   = TITHI_NAMES.get(tithi_norm, tithi_name) or "--"
     paksha_hi  = PAKSHA_NAMES.get(paksha.capitalize() if paksha else "", paksha)
     translated["tithi"]      = f"{paksha_hi} {tithi_hi}".strip() or "--"
-    translated["tithi_ends"] = _dig(tithi_item, "completion", "ends_at", "completes_at", default="")
+    translated["tithi_ends"] = _format_time(_dig(tithi_item, "completion", "ends_at", "completes_at", default=""))
 
     # Nakshatra
     nak      = result.get("nakshatra") or {}
@@ -544,25 +570,27 @@ def fetch_full_panchang(lat, lng, tz, now, debug_raw=False):
     nak_norm = NAKSHATRA_ALIASES.get(nak_name, nak_name)
     translated["nakshatra"]      = NAKSHATRA_NAMES.get(nak_norm, nak_name) or "--"
     translated["nakshatra_lord"] = _dig(nak, "lord", "nakshatra_lord", default="")
-    translated["nakshatra_ends"] = _dig(nak, "ends_at", "completion", "completes_at", default="")
+    translated["nakshatra_ends"] = _format_time(_dig(nak, "ends_at", "completion", "completes_at", default=""))
 
     # Yoga
     yoga_item = _first_item(result.get("yoga") or {})
     yoga_name = _dig(yoga_item, "name", "yoga_name", default="")
     yoga_norm = YOGA_ALIASES.get(yoga_name, yoga_name)
     translated["yoga"]      = YOGA_NAMES.get(yoga_norm, yoga_name) or "--"
-    translated["yoga_ends"] = _dig(yoga_item, "completion", "ends_at", "completes_at", default="")
+    translated["yoga_ends"] = _format_time(_dig(yoga_item, "completion", "ends_at", "completes_at", default=""))
 
     # Karan
     karan_item = _first_item(result.get("karana") or {})
     karan_name = _dig(karan_item, "name", "karan_name", default="")
-    translated["karan"] = KARAN_NAMES.get(karan_name, karan_name) or "--"
+    karan_norm = KARAN_ALIASES.get(karan_name, karan_name)
+    translated["karan"] = KARAN_NAMES.get(karan_norm, karan_name) or "--"
 
     # Rahu Kaal
+    # Rahu Kaal — confirmed field names: starts_at / ends_at
     rahu    = result.get("rahu") or {}
     r_start = _dig(rahu, "starts_at", "start_time", "start", default="--")
     r_end   = _dig(rahu, "ends_at",   "end_time",   "end",   default="--")
-    translated["rahu_kaal"] = f"{r_start} - {r_end}"
+    translated["rahu_kaal"] = f"{_format_time(r_start)} - {_format_time(r_end)}"
 
     # Lunar Month
     lunar = result.get("lunar") or {}
@@ -597,16 +625,6 @@ def fetch_full_panchang(lat, lng, tz, now, debug_raw=False):
         "vedic_weekday_name", "weekday_name", "name",
         default="--"
     )
-
-    if debug_raw:
-        translated["_raw_debug"] = raw_dump
-        translated["_parsed_types"] = {
-            k: {
-                "type": type(v).__name__,
-                "preview": (str(v)[:200] if v is not None else None)
-            }
-            for k, v in result.items()
-        }
 
     return translated, None
 
