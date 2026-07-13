@@ -339,7 +339,7 @@ YOGA_ALIASES = {
     "Soubhaagya": "Saubhagya",
     "Sobhana":    "Shobhana",
     "Sukharma":   "Sukarma",
-    "Vyaghaata":  "Vyaghata",
+    "Vyaaghaata":  "Vyaghata",
 }
 
 KARAN_NAMES = {
@@ -483,7 +483,7 @@ def _dig(d, *keys, default=None):
     return default
 
 def _format_time(dt_str, with_seconds=False):
-    """Extracts just HH:MM (or HH:MM:SS) from a 'YYYY-MM-DD HH:MM:SS[.ffffff]' string."""
+    """Extracts HH:MM (or HH:MM:SS) in 12-hour format with AM/PM."""
     if not dt_str or dt_str == "--":
         return "--"
     try:
@@ -491,9 +491,9 @@ def _format_time(dt_str, with_seconds=False):
             dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M:%S.%f")
         else:
             dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M:%S")
-        return dt.strftime("%H:%M:%S") if with_seconds else dt.strftime("%H:%M")
+        return dt.strftime("%I:%M:%S %p") if with_seconds else dt.strftime("%I:%M %p")
     except Exception:
-        return dt_str  # fall back to original text if parsing fails
+        return dt_str
 
 
 def fetch_full_panchang(lat, lng, tz, now, debug_raw=False):
