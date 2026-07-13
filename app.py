@@ -817,6 +817,9 @@ def get_kundali():
             headers=headers, timeout=15
         )
 
+print(f"Kundali API status: {kundali_response.status_code}")
+print(f"Kundali API response: {kundali_response.text[:1000]}")
+
         planet_response = requests.get(
             "https://api.prokerala.com/v2/astrology/planet-position",
             params={
@@ -862,7 +865,9 @@ def get_kundali():
             "city":        city or f"{lat}, {lng}",
             "kundali_svg": kundali_data.get("data", {}).get("svg", ""),
             "planets":     planets_formatted,
-            "lagna":       kundali_data.get("data", {}).get("ascendant", {})
+            "lagna":       kundali_data.get("data", {}).get("ascendant", {}),
+            "_debug_kundali_status": kundali_response.status_code,
+            "_debug_kundali_raw":    kundali_response.text[:500],
         })
 
     except Exception as e:

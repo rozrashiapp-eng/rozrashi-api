@@ -1054,7 +1054,7 @@ async function generateKundali() {
                         </tr>
                         ${json.planets.map(p => `
                         <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
-                            <td style="padding:7px 4px;color:#180a0a;">
+                            <td style="padding:7px 4px;color:#fff;">
                                 ${p.name}
                                 ${p.is_retro ? '<span style="color:#ef4444;font-size:10px;">(वक्री)</span>' : ''}
                             </td>
