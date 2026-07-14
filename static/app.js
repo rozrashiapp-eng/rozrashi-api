@@ -1047,19 +1047,19 @@ async function generateKundali() {
                         🪐 ग्रह स्थिति
                     </div>
                     <table style="width:100%;border-collapse:collapse;font-size:13px;">
-                        <tr style="color:#a78bfa;border-bottom:1px solid rgba(255,107,0,0.2);">
-                            <th style="text-align:left;padding:6px 4px;color:#a78bfa !important;">ग्रह</th>
+                        <tr style="color:#8B6914;border-bottom:1px solid rgba(255,107,0,0.2);">
+                            <th style="text-align:left;padding:6px 4px;">ग्रह</th>
                             <th style="text-align:left;padding:6px 4px;">राशि</th>
                             <th style="text-align:right;padding:6px 4px;">अंश</th>
                         </tr>
                         ${json.planets.map(p => `
-                        <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
-                            <td style="padding:7px 4px;color:#fff;">
+                        <tr style="border-bottom:1px solid rgba(0,0,0,0.05);">
+                            <td style="padding:7px 4px;color:#2D1B00;">
                                 ${p.name}
                                 ${p.is_retro ? '<span style="color:#ef4444;font-size:10px;">(वक्री)</span>' : ''}
                             </td>
-                            <td style="padding:7px 4px;color:#ffd200;">${p.rashi}</td>
-                            <td style="padding:7px 4px;text-align:right;color:#94a3b8;">${p.degree}°</td>
+                            <td style="padding:7px 4px;color:#FF6B00;font-weight:600;">${p.rashi}</td>
+                            <td style="padding:7px 4px;text-align:right;color:#8B6914;">${p.degree}°</td>
                         </tr>`).join('')}
                     </table>
                 </div>
