@@ -1048,7 +1048,7 @@ async function generateKundali() {
                     </div>
                     <table style="width:100%;border-collapse:collapse;font-size:13px;">
                         <tr style="color:#a78bfa;border-bottom:1px solid rgba(255,107,0,0.2);">
-                            <th style="text-align:left;padding:6px 4px;">ग्रह</th>
+                            <th style="text-align:left;padding:6px 4px;color:#a78bfa !important;">ग्रह</th>
                             <th style="text-align:left;padding:6px 4px;">राशि</th>
                             <th style="text-align:right;padding:6px 4px;">अंश</th>
                         </tr>
