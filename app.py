@@ -833,6 +833,33 @@ def get_kundali():
         kundali_data = kundali_response.json() if kundali_response.status_code == 200 else {}
         planet_data  = planet_response.json()  if planet_response.status_code == 200  else {}
 
+        chart_response = requests.get(
+            "https://api.prokerala.com/v2/astrology/chart",
+            params={
+                "ayanamsa":    1,
+                "coordinates": f"{lat},{lng}",
+                "datetime":    datetime_str,
+                "chart_type":  "rasi",
+                "chart_style": "north-indian",
+                "format":      "svg"
+            },
+            headers=headers, timeout=15
+        )
+        print(f"Chart API status: {chart_response.status_code}")
+        print(f"Chart API response: {chart_response.text[:500]}")
+
+        chart_svg = ""
+        if chart_response.status_code == 200:
+            ctype = chart_response.headers.get("Content-Type", "")
+            if "svg" in ctype or "xml" in ctype:
+                chart_svg = chart_response.text
+            else:
+                try:
+                    chart_json = chart_response.json()
+                    chart_svg = chart_json.get("data", {}).get("svg", "") or chart_json.get("svg", "")
+                except Exception:
+                    chart_svg = ""
+
         planet_hindi = {
             "Sun": "सूर्य ☀️", "Moon": "चंद्र 🌙", "Mars": "मंगल 🔴",
             "Mercury": "बुध 💚", "Jupiter": "गुरु 🟡", "Venus": "शुक्र ⚪",
@@ -863,11 +890,11 @@ def get_kundali():
             "dob":         f"{day:02d}/{month:02d}/{year}",
             "tob":         tob,
             "city":        city or f"{lat}, {lng}",
-            "kundali_svg": kundali_data.get("data", {}).get("svg", ""),
+            "kundali_svg": chart_svg,
             "planets":     planets_formatted,
             "lagna":       kundali_data.get("data", {}).get("ascendant", {}),
-            "_debug_kundali_status": kundali_response.status_code,
-            "_debug_kundali_raw":    kundali_response.text[:500],
+            "_debug_chart_status": chart_response.status_code,
+            "_debug_chart_raw":    chart_response.text[:500],
         })
 
     except Exception as e:
