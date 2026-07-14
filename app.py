@@ -841,7 +841,7 @@ def get_kundali():
                 "datetime":    datetime_str,
                 "chart_type":  "rasi",
                 "chart_style": "north-indian",
-                "format":      "svg"
+                "format":      "svg",
                 "la":          "hi"
             },
             headers=headers, timeout=15
