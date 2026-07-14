@@ -842,6 +842,7 @@ def get_kundali():
                 "chart_type":  "rasi",
                 "chart_style": "north-indian",
                 "format":      "svg"
+                "la":          "hi"
             },
             headers=headers, timeout=15
         )
